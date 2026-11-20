@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="3D-схема самоката YGW 5.0: детали, артикулы и фото из каталога запчастей.">
+<title>Самокат YGW 5.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0;padding:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;height:100%}
+body{font-size:14px;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+img{max-width:100%}
+
+/* Layout: full-screen 3D inspection bench; header + legend float on top, mode switch docked at the bottom, part card with catalog photo above it */
+:root{
+  --bg:#f4f5f7; --grid:#e5e8ee; --grid-strong:#d7dce4;
+  --panel:#ffffffee; --line:#dfe3ea; --fg:#15181e; --muted:#6a7180;
+  --accent:#1f2937; --accent-ink:#ffd400; --brand:#e0b400; --chip:#eef0f4;
+  --shadow:0 6px 24px rgba(20,25,40,.08);
+  --f-display:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1115; --grid:#171a20; --grid-strong:#1e222a;
+  --panel:#171a21ee; --line:#272c35; --fg:#eceef2; --muted:#8e95a3;
+  --accent:#ffd400; --accent-ink:#15181e; --brand:#ffd400; --chip:#1f232b;
+  --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1115; --grid:#171a20; --grid-strong:#1e222a;
+  --panel:#171a21ee; --line:#272c35; --fg:#eceef2; --muted:#8e95a3;
+  --accent:#ffd400; --accent-ink:#15181e; --brand:#ffd400; --chip:#1f232b;
+  --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-display);overflow:hidden;}
+#app{position:relative;height:100%;width:100%}
+#stage{position:absolute;inset:0}
+#stage canvas{display:block;touch-action:none}
+
+.top{position:absolute;top:12px;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));pointer-events:none}
+.top>*{pointer-events:auto}
+.head{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);backdrop-filter:blur(8px);max-width:360px}
+.head h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+.head h1 span{background:var(--brand);color:#15181e;padding:0 6px;border-radius:5px;margin-left:4px}
+.head p{margin:4px 0 0;color:var(--muted);font-size:12.5px;line-height:1.4}
+.head-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+.lid-btn{all:unset;cursor:pointer;font:600 11.5px var(--f-display);padding:4px 10px;border-radius:7px;background:var(--accent);color:var(--accent-ink)}
+.lid-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.lid-btn[aria-pressed="true"]{background:var(--brand);color:#15181e}
+.stage-tag{display:inline-block;margin-top:0;font:500 10.5px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--chip);padding:3px 8px;border-radius:6px}
+
+.legend{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 12px 8px;box-shadow:var(--shadow);backdrop-filter:blur(8px);min-width:240px}
+.count-lbl{font:500 10px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.count{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
+.count small{font-size:13px;font-weight:600;color:var(--muted);margin-left:4px;letter-spacing:0}
+.cover{font-size:12px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.cover b{color:var(--fg)}
+.bar{height:4px;background:var(--chip);border-radius:3px;margin:8px 0 6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--brand);transition:width 1.2s ease}
+.groups{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+.groups button{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:7px;cursor:pointer;font-size:12.5px;font-weight:500}
+.groups button:hover{background:var(--chip)}
+.groups button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.groups button[aria-pressed="true"]{background:var(--chip);font-weight:700}
+.groups .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.groups .nm{flex:1;min-width:0}
+.groups .n{font:500 11px var(--f-mono);padding:1px 6px;border-radius:5px;font-variant-numeric:tabular-nums}
+.toggle-legend{display:none}
+
+.modes{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;box-shadow:var(--shadow);backdrop-filter:blur(8px);max-width:calc(100% - 32px);overflow-x:auto}
+.modes button{all:unset;cursor:pointer;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.modes button:hover{color:var(--fg)}
+.modes button:focus-visible{outline:2px solid var(--brand)}
+.modes button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.mode-note{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(68px + env(safe-area-inset-bottom,0px));font-size:12px;color:var(--muted);white-space:nowrap;pointer-events:none}
+
+.card{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));width:300px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);backdrop-filter:blur(8px);max-height:calc(100% - 120px);overflow:auto;box-sizing:border-box}
+.card .g{display:inline-flex;align-items:center;gap:6px;font:500 10.5px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.card .g i{width:8px;height:8px;border-radius:50%}
+.card h2{margin:4px 0 2px;font-size:16px;font-weight:700;letter-spacing:-.01em;padding-right:20px}
+.card .sub{font-size:11.5px;color:var(--muted);margin:0 0 8px}
+.card .ph{background:#fff;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;height:130px;margin-bottom:8px;overflow:hidden}
+.card .ph img{max-height:120px;max-width:100%;object-fit:contain}
+.card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px}
+.card dt{color:var(--muted)}
+.card dd{margin:0;font-family:var(--f-mono);font-size:11.5px;min-width:0;overflow-wrap:anywhere}
+.card .x{all:unset;position:absolute;top:8px;right:10px;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px 4px;border-radius:5px}
+.card .x:focus-visible{outline:2px solid var(--brand)}
+.copy{all:unset;cursor:pointer;font:500 10.5px var(--f-mono);color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 5px;margin-left:6px}
+.copy:focus-visible{outline:2px solid var(--brand)}
+
+.tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font-size:12px;font-weight:600;padding:4px 8px;border-radius:6px;transform:translate(12px,-120%);white-space:nowrap}
+.row-lbl{position:absolute;pointer-events:none;font:600 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;transform:translate(-100%,-50%);white-space:nowrap;padding-right:8px}
+
+@media (max-width:700px){
+  .top{flex-direction:column;gap:8px;top:8px}
+  .head{max-width:none;width:100%;padding:10px 12px;box-sizing:border-box}
+  .head h1{font-size:17px}
+  .head p{display:none}
+  .stage-tag{margin-top:4px}
+  .legend{width:100%;box-sizing:border-box;min-width:0;padding:8px 10px}
+  .legend-top{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+  .count{font-size:24px}
+  .toggle-legend{display:inline-block;all:unset;cursor:pointer;font:500 11px var(--f-mono);color:var(--fg);padding:2px 4px}
+  .legend.collapsed .groups,.legend.collapsed .bar{display:none}
+  .groups{flex-direction:row;flex-wrap:wrap;gap:4px}
+  .groups li{flex:0 0 auto}
+  .groups button{width:auto;background:var(--chip);padding:4px 8px}
+  .card{left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));width:auto;bottom:calc(66px + env(safe-area-inset-bottom,0px));max-height:52%}
+  .card .ph{height:96px}.card .ph img{max-height:88px}
+  .modes{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  .modes button{padding:8px 10px;font-size:12.5px}
+  .mode-note{display:none}
+  .row-lbl{font-size:9px}
+}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="stage" aria-label="3D-модель самоката YGW 5.0"></div>
+  <div id="labels"></div>
+
+  <div class="top">
+    <header class="head">
+      <h1>Электросамокат<span>YGW 5.0</span></h1>
+      <p>Детали привязаны к каталогу запчастей: артикул, количество, цена и фото. Нажмите на деталь, чтобы открыть её карточку.</p>
+      <div class="head-row"><span class="stage-tag">Версия 2 · по фото и каталогу</span><button class="lid-btn" id="lidBtn" type="button" aria-pressed="false">Снять крышку АКБ</button></div>
+    </header>
+
+    <aside class="legend" id="legend">
+      <div class="legend-top">
+        <div>
+          <div class="count-lbl">Деталей в модели</div>
+          <div class="count"><span id="count">0</span><small>шт.</small></div>
+          <div class="cover">Артикулов каталога: <b id="covered">0</b> из <b id="catTotal">0</b></div>
+        </div>
+        <button class="toggle-legend" id="toggleLegend" type="button" aria-expanded="false">группы ▾</button>
+      </div>
+      <div class="bar"><i id="bar"></i></div>
+      <ul class="groups" id="groups"></ul>
+    </aside>
+  </div>
+
+  <div class="mode-note" id="modeNote"></div>
+  <nav class="modes" role="tablist" id="modes">
+    <button role="tab" data-mode="finished" aria-selected="true">Собран</button>
+    <button role="tab" data-mode="xray" aria-selected="false">Рентген</button>
+    <button role="tab" data-mode="cut" aria-selected="false">Разрез</button>
+    <button role="tab" data-mode="explode" aria-selected="false">Разнесённый</button>
+    <button role="tab" data-mode="layout" aria-selected="false">Все детали</button>
+  </nav>
+
+  <section class="card" id="card" hidden>
+    <button class="x" id="cardClose" type="button" aria-label="Закрыть">×</button>
+    <div class="g"><i id="cardDot"></i><span id="cardGroup"></span></div>
+    <h2 id="cardName"></h2>
+    <p class="sub" id="cardSub"></p>
+    <div class="ph" id="cardPh"><img id="cardImg" alt=""></div>
+    <dl id="cardDl"></dl>
+  </section>
+  <div class="tip" id="tip" hidden></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/SSAOShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/FXAAShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/SSAOPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
+<script>
+/* Каталог YGW 5.0: код → [англ. название, кит. название, кол-во на самокат, ед., цена 2025, MOQ, срок поставки (дн.), тип ME/EE] */
+const CATALOG = {"125HL50-01-0":["Frame","YGW5.0车架",1,"ST",416.87,5000,50,"ME"],"161XH50-01-0":["Front curved deck","前盖板",1,"PC",11.59,1000,30,"ME"],"160HL50-01-0":["Rear curved deck","尾翼座",1,"PC",29.4,3000,90,"ME"],"643XH50-01-0":["Rear Frender","后泥板",1,"PC",18.32,1000,30,"ME"],"182ZD50-01-0":["Battery apartment grip","电池仓内部胶垫",4,"PC",2.23,5000,40,"ME"],"744XH45-01-0":["Front reflector holder","前反光座",1,"PC",0.65,5000,40,"ME"],"150XH50-01-0":["Front battery holder","电池前支架",1,"PC",2.25,1000,30,"ME"],"150XH50-02-0":["Rear battery holder","电池后支架",1,"PC",2.46,5000,30,"ME"],"195XH50-02-0":["Motor cable cover","电机线护盖",1,"PC",3.02,1000,30,"ME"],"141HL50-01-0":["Battery lid(no battery lid lock loop)","电池仓盖板(无锁舌)",1,"ST",58.68,1000,50,"ME"],"142ZD50-02-0":["Battery lid grip","电池仓盖板防滑垫",1,"PC",15,5000,40,"ME"],"951KF50-01-0":["Glue","胶水",30,"ml",0.1,"TBD","TBD","ME"],"644XH50-01-0":["Rear Frender extension plastic","后泥板延伸块",1,"PC",5.04,5000,40,"ME"],"148ZD50-01-0":["Battery lid absorber（irregular）","电池仓盖缓震垫",2,"PC",1.6,5000,40,"ME"],"145ZD50-01-0":["Battery lid absorber(rectangle)","电池仓盖方形胶垫",1,"PC",1.1,5000,40,"ME"],"329HL50-01-0":["Front Fork Tube and Front fork top set","前叉竖管肩盖组",1,"ST",66.3,5000,50,"ME"],"326CD50-01-0":["Left front shock absorber","左前减震器",1,"ST",39,1000,40,"ME"],"326CD50-02-0":["Right front shock absorber","右前减震器",1,"ST",39,1000,40,"ME"],"457DL50-01-0":["Screws for Front Fork Tube（M23*1.0）","前叉竖管吊紧螺丝",1,"PC",4,1000,30,"ME"],"822YX23-01-0":["Big flat washer","大平垫",1,"PC",0.57,5000,30,"ME"],"458HL50-01-0":["Fork Tube clamp","竖管夹",1,"PC",16.5,500,50,"ME"],"633XH50-01-0":["Front Frender","前泥板",1,"PC",9.5,1000,30,"ME"],"025HL50-01-0":["Kickstand","车梯组件",1,"ST",55.38,5000,80,"ME"],"405HL50-02-0":["Handlebar","车把",1,"ST",33.9,5000,50,"ME"],"443HL50-01-0":["Main Pole and IOT holder set","大立管组（无Moscow专属标 ；带俄体Yandex Go 左右无膜标）",1,"ST",129.5,5000,50,"ME"],"434HL50-01-0":["Front light housing clamp","把立前盖",1,"PC",13.4,5000,50,"ME"],"446HL50-01-0":["Main pole clamp","大管夹",1,"PC",36.5,5000,80,"ME"],"448HL50-01-0":["Chain lock metal part","链条锁锁紧块",1,"PC",1.53,5000,50,"ME"],"448XH50-01-0":["Cable location limit plastic","线卡",2,"PC",0.28,1000,30,"ME"],"448XH50-02-0":["Hook","置物挂钩",1,"PC",1.63,1000,30,"ME"],"416XH50-01-0":["Head light cover","前灯护盖",1,"PC",3.41,1000,30,"ME"],"419XH50-01-0":["IOT holder cover","把立下护盖",1,"PC",3.02,1000,30,"ME"],"531XX40-01-0":["Left Brake Protect  Cover","刹把左护套",1,"ST",7.18,1000,30,"ME"],"531XX40-02-0":["Right Brake Protect  Cover","刹把右护套",1,"ST",7.5,1000,30,"ME"],"423XH22-11-0":["Left Handlebar Grip","左把套",1,"PC",2.63,5000,30,"ME"],"423XH22-12-0":["Right Handlebar Grip","右把套",1,"PC",2.83,5000,30,"ME"],"425XH22-03-0":["Grips spacer","把套端盖",2,"PC",1.26,2000,30,"ME"],"426ZD22-01-0":["R Silicone Plate","YGW4.5的R硅胶片",2,"PC",0.6,5000,40,"ME"],"427HL22-01-0":["Grip fixing metal","把套内固定件",2,"PC",0.7,5000,50,"ME"],"456JY50-01-0":["Fork bearing","碗组件培林",1,"ST",22.35,1000,30,"ME"],"471XX22-02-0":["Bell","转铃",1,"PC",4.3,1000,25,"ME"],"523TZ80-07-0":["Front Brake","前鼓刹",1,"ST",13.5,1000,30,"ME"],"524TZ80-05-0":["Rear Brake","后鼓刹",1,"ST",13.8,1000,30,"ME"],"513TZ50-02-0":["Front Brake cable","前刹车线",1,"ST",3.6,1000,30,"ME"],"514TZ50-02-0":["Rear Brake cable","后刹车线",1,"ST",3.6,5000,30,"ME"],"604LK12-02-0":["Tire set","轮胎组（内外胎）",1,"ST",62.67,5000,90,"ME"],"613TZ12-02-0":["Front wheel hub","前轮毂组",1,"ST",78,1000,30,"ME"],"832YX12-05-0":["Front Wheel Axle Screw","前轮轴螺杆",1,"PC",8.46,500,30,"ME"],"817YX12-02-0":["Front Wheel nut(M12*P1.25)","前轮轴杆螺母",1,"PC",1.19,5000,30,"ME"],"651YX50-02-0":["Anti-spinning spacer for the motor","电机轴外防转片",2,"PC",1.25,5000,40,"ME"],"659XH50-01-0":["Rear axle protect cover","后轴杆保护盖",2,"PC",0.92,1000,30,"ME"],"817YX12-01-0":["Rear axle nut","后轴五角螺母",2,"PC",1.4,5000,30,"ME"],"932WM50-01-0":["Front and rear reflection license plate","5.0前后反光号码贴纸",2,"PC",5,1000,25,"ME"],"262TZ50-01-0":["Left Brake Assembly","左刹把",1,"PC",15.5,1000,30,"ME"],"262TZ50-02-0":["Right Brake Assembly","右刹把",1,"PC",15.5,1000,30,"ME"],"164ZD50-01-0":["waterproof rubber plug","外充电座防水塞",1,"PC",0.85,5000,40,"ME"],"804YX04-06-0":["Screw","M4锥头螺钉",11,"PC",0.15,5000,30,"ME"],"804YX04-10-0":["Screw","M4锥头螺钉",2,"PC",0.19,5000,30,"ME"],"804YX04-19-0":["Screw","M4锥头螺钉",2,"PC",0.24,5000,30,"ME"],"804YX04-20-0":["Screw","M4锥头螺钉",3,"PC",0.27,5000,30,"ME"],"804YX04-08-0":["Screw","M4 圆柱螺钉",16,"PC",0.16,5000,30,"ME"],"804YX04-09-0":["Screw","M4 圆柱螺钉",9,"PC",0.19,5000,30,"ME"],"804YX04-21-0":["Screw","M4 圆柱螺钉",2,"PC",0.33,5000,30,"ME"],"805YX05-18-0":["Screw","M5菇头螺钉",4,"PC",0.33,5000,30,"ME"],"805YX05-10-0":["Screw","M5菇头螺钉",27,"PC",0.26,5000,30,"ME"],"805YX05-02-0":["Screw","M5菇头螺钉",1,"PC",0.28,5000,30,"ME"],"805YX05-25-0":["Screw","M5柱头螺钉",2,"PC",0.32,5000,30,"ME"],"806YX06-07-0":["Screw","M6圆柱螺钉",5,"PC",0.47,5000,30,"ME"],"800YX10-03-0":["Screw","阶梯螺丝",1,"PC",1.15,5000,30,"ME"],"808YX08-01-0":["Screw","M8螺钉",9,"PC",0.78,5000,30,"ME"],"808YX08-11-0":["Screw","M8螺钉",2,"PC",0.78,5000,30,"ME"],"808YX08-03-0":["Screw","M8螺钉",2,"PC",0.92,5000,30,"ME"],"812YX04-01-0":["M4 Nut","M4尼龙螺母",1,"PC",0.06,5000,30,"ME"],"813YX05-01-0":["M5 Nut","M5尼龙螺母",4,"PC",0.08,5000,30,"ME"],"820ST08-01-0":["M8 Gasket","重型防松垫圈",2,"PC",0.21,5000,30,"ME"],"820ST10-01-0":["M8 Gasket","重型防松垫圈",1,"PC",0.32,5000,30,"ME"],"820ST12-01-0":["M8 Gasket","重型防松垫圈",1,"PC",0.43,5000,30,"ME"],"804YX04-23-0":["Aluminum rivets","铝铆钉",4,"PC",0.09,5000,30,"ME"],"274HL50-01-0":["Touch fasteners","主线缆魔术贴",1,"PC",0.9,500,50,"ME"],"170ZD50-01-0":["Rear fender absorber","后挡板防尘条",1,"PC",1.5,5000,40,"ME"],"183YX50-01-0":["Steel sheet","暗门封板",1,"PC",0.62,5000,30,"ME"],"153ZD50-01-0":["kickstand absorber","停车架缓震块",1,"PC",1.3,5000,40,"ME"],"803YX03-09-0":["Screw","M3锥头螺钉",4,"PC",0.08,5000,30,"ME"],"806YX06-03-0":["Screw","M6圆柱螺钉",1,"PC",0.43,5000,30,"ME"],"932WM20-02-0":["Front cover advertising sticker","前盖板广告贴纸",1,"PC",3,1000,25,"ME"],"195XH50-03-0":["Brake cable cover","刹车线护盖",1,"PC",2.35,5000,30,"ME"],"145ZD50-02-0":["Battery lid absorber（protrusion）","电池仓盖凸点缓震垫",2,"PC",0.75,5000,40,"ME"],"484XH50-01-0":["Phone holder","手机架",1,"ST",26.83,3000,30,"ME"],"934HL50-01-0":["Nameplate","铭牌标",1,"PC",0.28,500,50,"ME"],"938WM50-02-0":["Left and right reflection license plate (small)","5.0左右反光号码贴纸2（小号）",2,"PC",5,1000,25,"ME"],"935WM50-01-0":["Phone holder guider sticker","手机架指引标",1,"PC",0.5,1000,25,"ME"],"743SP40-01-0":["Front reflector(White)","前反光片",1,"PC",2.66,1000,30,"EE"],"147HC50-01-0":["Battery lid lock loop","盖板锁舌",1,"ST",3.5,3000,30,"EE"],"763KG50-01-0":["Side reflector(White)","侧反光片",2,"ST",1.4,1000,30,"EE"],"703CC50-01-0":["Head light","前灯",1,"ST",22.09,1000,30,"EE"],"723SP50-01-0":["Brake light","尾灯",1,"PC",34.86,1000,30,"EE"],"280JK50-01-0":["Display","DISPLAY",1,"ST",185.28,2000,45,"EE"],"277BK50-01-0":["QR code Plate","WIND5.0 二维码镜片",1,"ST",2,2000,30,"EE"],"773XD50-01-0":["Status LED","左右状态灯",2,"ST",19.43,500,30,"EE"],"205AN50-01-0":["IOT","IOT",1,"ST",453,5000,45,"EE"],"216ST36-02-0":["ECU","ECU",1,"PC",198,1000,45,"EE"],"261WX50-01-0":["Throttle","电门开关",1,"PC",20,500,30,"EE"],"264JL50-01-0":["Main Cable","主电线",1,"PC",28,500,20,"EE"],"264JL50-02-0":["Chain lock cable","链锁转接线材",1,"PC",9.9,500,20,"EE"],"266JK50-01-0":["Battery lock","电池仓锁",1,"PC",72.84,2000,45,"EE"],"272JK50-01-0":["Chain lock","链锁",1,"PC",104.05,2000,45,"EE"],"279HQ50-01-0":["Chain lock holder","链条固定壳",1,"PC",11.53,5000,30,"EE"],"279CR50-01-0":["Chain lock holder plug","链条固定壳螺丝塞",2,"PC",0.15,6000,30,"EE"],"279GF50-01-0":["Chain lock strip","（锁）链条",1,"PC",20.2,1000,30,"EE"],"264JL50-03-0":["DC transfer cable","车架DC转接线材",1,"ST",3.5,500,20,"EE"],"268JK50-01-0":["Light button","一项键",1,"PC",23.29,2000,45,"EE"],"235JY36-01-0":["Motor(with rear tire)","驱动电机（带轮胎）",1,"ST",315,560,30,"EE"],"210NM50-01-0":["Heat dissipation silicone","5.0 ECU散热硅胶",1,"PC",2.2,2000,30,"EE"],"264JL50-04-0":["Button adapter cable","按键转接线材",1,"PC",3.3,500,20,"EE"],"264JL50-05-0":["Tail light adapter cable","尾灯转接线材",1,"PC",4.5,500,20,"EE"],"446XH50-01-0":["Number plate lock set","前号码牌前盖组件",1,"PC",17.75,5000,40,"ME"],"446XH50-02-0":["Front number plate cover","前号码牌后盖",1,"PC",4.7,5000,40,"ME"],"805YX05-23-0":["Screw","M5x30L螺丝",4,"PC",0.52,5000,40,"ME"],"169XH50-01-0":["Rear number plate holder","后号码牌固定座",1,"PC",17,5000,40,"ME"],"446XH50-01-02":["number plate","前号码牌贴板",1,"PC",2.2,5000,40,"ME"],"446XH50-01-04":["Screw","M4x10L 自攻螺丝",5,"PC",0.15,5000,40,"ME"]};
+</script>
+<script>
+(() => {
+const V3 = THREE.Vector3, PI = Math.PI;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Группы ---------- */
+const GROUPS = {
+  frame: {name:'Рама и дека',            color:'#e0b400', ex:[0,0,0]},
+  steer: {name:'Руль и стойка',          color:'#8b5cf6', ex:[0.2,2.6,0]},
+  fork:  {name:'Вилка и переднее колесо',color:'#0ea5a4', ex:[2.8,0,0]},
+  rear:  {name:'Мотор-колесо',           color:'#2563eb', ex:[-2.8,0,0]},
+  brakes:{name:'Тормоза',                color:'#ef4444', ex:[0,0.3,2.4]},
+  elec:  {name:'Электроника',            color:'#f97316', ex:[0,0,-2.6]},
+  body:  {name:'Пластик и номера',       color:'#ec4899', ex:[0,1.0,0]},
+};
+
+/* ---------- Сцена ---------- */
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({antialias:false, powerPreference:'high-performance'});
+const PR = Math.min(devicePixelRatio, innerWidth < 700 ? 1.5 : 2);
+renderer.setPixelRatio(PR);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled = true;
+renderer.outputEncoding = THREE.sRGBEncoding;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 0.3, 150);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 4; controls.maxDistance = 90;
+controls.maxPolarAngle = PI * 0.495;   // камера не уходит под пол
+
+/* Студийный свет: ключевой сверху-спереди, контровой сзади, мягкая заливка */
+scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa3b0, 0.3));
+const sun = new THREE.DirectionalLight(0xffffff, 1.15);
+sun.position.set(7, 16, 9); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+Object.assign(sun.shadow.camera, {left:-10, right:10, top:12, bottom:-6, near:1, far:45});
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0xfff4e0, 0.55); rim.position.set(-12, 9, -6); scene.add(rim);
+const fill = new THREE.DirectionalLight(0xdfe8ff, 0.2); fill.position.set(-4, 3, 12); scene.add(fill);
+
+/* Студийный фон: бесшовный пол, уходящий в цвет фона */
+const themeColor = name => new THREE.Color((getComputedStyle(document.documentElement).getPropertyValue(name) || '#f4f5f7').trim()).convertSRGBToLinear();
+const groundMat = new THREE.ShadowMaterial({opacity:0.2});   // только тень, без шва с фоном
+const ground = new THREE.Mesh(new THREE.CircleGeometry(90, 64), groundMat);
+ground.rotation.x = -PI/2; ground.receiveShadow = true; scene.add(ground);
+const studioFog = new THREE.Fog(0xffffff, 45, 110); scene.fog = studioFog;
+function applyTheme() {
+  const bg = themeColor('--bg');
+  scene.background = bg; studioFog.color.copy(bg);
+}
+applyTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+/* Постобработка: затенение в стыках (SSAO), гамма, сглаживание краёв (FXAA) */
+const composer = new THREE.EffectComposer(renderer);
+const renderPass = new THREE.RenderPass(scene, camera);
+const ssaoPass = new THREE.SSAOPass(scene, camera, 800, 600);
+ssaoPass.kernelRadius = 0.55; ssaoPass.minDistance = 0.0006; ssaoPass.maxDistance = 0.03;
+const gammaPass = new THREE.ShaderPass(THREE.GammaCorrectionShader);
+const fxaaPass = new THREE.ShaderPass(THREE.FXAAShader);
+[renderPass, ssaoPass, gammaPass, fxaaPass].forEach(p => composer.addPass(p));
+function setPost(m) {           // в рентгене и разрезе SSAO мешает прозрачности и сечению
+  const ao = m !== 'xray' && m !== 'cut';
+  ssaoPass.enabled = ao; renderPass.enabled = !ao;
+  scene.fog = m === 'layout' ? null : studioFog;   // в раскладке камера далеко, туман не нужен
+}
+
+/* ---------- Окружение и материалы ---------- */
+renderer.toneMapping = THREE.NoToneMapping;
+renderer.toneMappingExposure = 1.25;
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = (() => {          // софтбоксы для бликов на краске и металле
+  const env = new THREE.Scene(); env.background = new THREE.Color(0x3a3d42);
+  const room = new THREE.Mesh(new THREE.BoxGeometry(40, 20, 40), new THREE.MeshBasicMaterial({color:0x4a4e55, side:THREE.BackSide}));
+  room.position.y = 8; env.add(room);
+  const box = (w,h,x,y,z,ry,rx,k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({side:THREE.DoubleSide})); m.material.color.setScalar(k); m.position.set(x,y,z); m.rotation.set(rx,ry,0); env.add(m); };
+  box(14, 9, 0, 17, 0, 0, PI/2, 6);        // верхний большой
+  box(3, 12, 15, 7, 4, -PI/2, 0, 4);       // боковые стрипы
+  box(3, 12, -15, 7, -4, PI/2, 0, 3);
+  box(16, 5, 0, 5, 19, PI, 0, 1.6);        // фронтальная заливка
+  box(16, 2, 0, -1.5, 0, 0, -PI/2, 0.35);  // пол
+  return pmrem.fromScene(env, 0.02).texture;
+})();
+
+function canvasTex(w, h, draw, rx=1, ry=1) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 4;
+  return t;
+}
+// Протектор шины: «ёлочка» вдоль окружности
+const treadTex = canvasTex(32, 128, (g,w,h) => {
+  g.fillStyle = '#1d1e21'; g.fillRect(0,0,w,h);
+  g.fillStyle = '#26272b'; g.fillRect(0,0,w,h*0.22); g.fillRect(0,h*0.78,w,h*0.22);
+  g.strokeStyle = '#0b0c0e'; g.lineWidth = 4;
+  g.beginPath(); g.moveTo(4,h*0.3); g.lineTo(w*0.7,h*0.5); g.lineTo(4,h*0.7); g.stroke();
+}, 56, 1);
+// Резиновый коврик деки: ромбовидная насечка
+const gripTex = canvasTex(64, 64, (g,w,h) => {
+  g.fillStyle = '#222428'; g.fillRect(0,0,w,h);
+  g.strokeStyle = '#2f3237'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(0,0); g.lineTo(w,h); g.moveTo(w,0); g.lineTo(0,h); g.stroke();
+}, 24, 7);
+// Номерной знак (условный номер, не настоящий)
+const plateTex = (lines, w, h) => canvasTex(w, h, (g) => {
+  g.fillStyle = '#f7f7f5'; g.fillRect(0,0,w,h);
+  g.strokeStyle = '#111'; g.lineWidth = Math.max(4, w*0.02); g.strokeRect(6,6,w-12,h-12);
+  g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const fs = h / (lines.length + 0.6); g.font = `700 ${fs}px "Arial Narrow", Arial, sans-serif`;
+  lines.forEach((l,i) => g.fillText(l, w/2, h*(i+0.8)/(lines.length+0.6)));
+});
+
+/* Фактурные карты (процедурные, рисуются на canvas): шагрень краски, зерно пластика, шлифовка металла, резина */
+function dataTex(size, fill, rx, ry, srgb=false) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'); fill(g, size);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 8;
+  if (srgb) t.encoding = THREE.sRGBEncoding; return t;
+}
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function noiseLayer(g, size, cells, alpha) {   // сглаженный «value noise»
+  const s = document.createElement('canvas'); s.width = s.height = cells; const sg = s.getContext('2d'); const d = sg.createImageData(cells, cells);
+  for (let i = 0; i < d.data.length; i += 4) { const v = rnd()*255; d.data[i]=d.data[i+1]=d.data[i+2]=v; d.data[i+3]=255; }
+  sg.putImageData(d, 0, 0); g.globalAlpha = alpha; g.imageSmoothingEnabled = true; g.drawImage(s, 0, 0, size, size); g.globalAlpha = 1;
+}
+const paintBump   = dataTex(256, (g,s) => { g.fillStyle='#808080'; g.fillRect(0,0,s,s); noiseLayer(g,s,48,0.35); noiseLayer(g,s,128,0.5); }, 8, 8);
+const plasticBump = dataTex(256, (g,s) => { g.fillStyle='#808080'; g.fillRect(0,0,s,s); noiseLayer(g,s,128,0.6); noiseLayer(g,s,256,0.7); }, 6, 6);
+const rubberBump  = dataTex(256, (g,s) => { g.fillStyle='#808080'; g.fillRect(0,0,s,s); noiseLayer(g,s,64,0.5); noiseLayer(g,s,256,0.5); }, 4, 4);
+const brushed     = dataTex(256, (g,s) => { g.fillStyle='#888'; g.fillRect(0,0,s,s);
+  for (let y = 0; y < s; y++) { const v = 110 + rnd()*90 | 0; g.fillStyle = `rgba(${v},${v},${v},0.55)`; g.fillRect(0, y, s, 1); }
+  for (let i = 0; i < 300; i++) { const v = rnd()*255|0; g.fillStyle = `rgba(${v},${v},${v},0.35)`; g.fillRect(rnd()*s, rnd()*s, 20 + rnd()*120, 1); } }, 1, 3);
+const knurl = dataTex(128, (g,s) => { g.fillStyle='#1f2125'; g.fillRect(0,0,s,s);
+  g.strokeStyle='#33363c'; g.lineWidth=7; g.beginPath(); g.moveTo(40,-4); g.quadraticCurveTo(100,64,40,132); g.stroke();
+  g.strokeStyle='#141518'; g.lineWidth=2; g.beginPath(); g.moveTo(48,-4); g.quadraticCurveTo(108,64,48,132); g.stroke(); }, 26, 1, true);
+// Экран: скорость и заряд (условные значения)
+const screenTex = dataTex(256, (g,s) => { g.fillStyle='#070b14'; g.fillRect(0,0,s,s);
+  g.fillStyle='#e9f1ff'; g.textAlign='center'; g.font='700 120px Arial, sans-serif'; g.fillText('0', s/2, 150);
+  g.font='600 26px Arial, sans-serif'; g.fillStyle='#8fa6cc'; g.fillText('км/ч', s/2, 190);
+  for (let i = 0; i < 5; i++) { g.fillStyle = i < 4 ? '#3ad17a' : '#24324a'; g.fillRect(48 + i*34, 214, 28, 14); } }, 1, 1, true);
+// Фара: отражатель с концентрическими кольцами
+const lampTex = dataTex(128, (g,s) => { const gr = g.createRadialGradient(64,64,2,64,64,64); gr.addColorStop(0,'#ffffff'); gr.addColorStop(0.35,'#fff6d8'); gr.addColorStop(1,'#cfc6aa'); g.fillStyle=gr; g.fillRect(0,0,s,s);
+  g.strokeStyle='rgba(120,110,80,0.35)'; for (let r = 10; r < 64; r += 7) { g.beginPath(); g.arc(64,64,r,0,2*PI); g.stroke(); } }, 1, 1, true);
+// Стоп-сигнал: рифлёный рассеиватель
+const tailTex = dataTex(128, (g,s) => { g.fillStyle='#b5121b'; g.fillRect(0,0,s,s); for (let x = 0; x < s; x += 8) { g.fillStyle='rgba(255,120,120,0.35)'; g.fillRect(x,0,3,s); } }, 4, 1, true);
+// Пластина с QR-узором (условный, не настоящий код)
+const qrTex = dataTex(128, (g,s) => { g.fillStyle='#fff'; g.fillRect(0,0,s,s); const n = 21, c = 112/n;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (rnd() > 0.55) { g.fillStyle='#111'; g.fillRect(8+x*c, 8+y*c, c, c); }
+  [[0,0],[14,0],[0,14]].forEach(([fx,fy]) => { g.fillStyle='#111'; g.fillRect(8+fx*c,8+fy*c,7*c,7*c); g.fillStyle='#fff'; g.fillRect(8+(fx+1)*c,8+(fy+1)*c,5*c,5*c); g.fillStyle='#111'; g.fillRect(8+(fx+2)*c,8+(fy+2)*c,3*c,3*c); }); }, 1, 1, true);
+
+// Панель-инструкция на наклонной трубе: условные пиктограммы (без надписей бренда)
+// Круглый дисплей: цифры скорости и зелёное кольцо
+const dialTex = dataTex(256, (g,s) => { g.fillStyle='#07090d'; g.fillRect(0,0,s,s);
+  g.strokeStyle='#22e07a'; g.lineWidth=14; g.beginPath(); g.arc(128,128,100, 0.2*PI, 0.8*PI, true); g.stroke();
+  g.fillStyle='#eafff3'; g.textAlign='center'; g.textBaseline='middle'; g.font='700 92px Arial, sans-serif'; g.fillText('00', 128, 120); }, 1, 1, true);
+// Наклейка на аккумуляторе: условный текст и штрихкод
+const battLabel = dataTex(256, (g,s) => { g.fillStyle='#e9eaec'; g.fillRect(0,0,s,s); g.fillStyle='#2a2c30';
+  for (let i = 0; i < 6; i++) g.fillRect(16, 20 + i*18, 120 + rnd()*90, 6);
+  for (let x = 16; x < 240; x += 3) if (rnd() > 0.4) g.fillRect(x, 150, rnd() > 0.5 ? 2 : 1, 60);
+  g.font = '700 28px Arial, sans-serif'; g.fillText('36V', 180, 120); }, 1, 1, true);
+const panelTex = dataTex(256, (g,s) => { g.fillStyle='#16181c'; g.fillRect(0,0,s,s);
+  g.strokeStyle='#8a9099'; g.fillStyle='#8a9099'; g.lineWidth=3;
+  for (let i = 0; i < 5; i++) { const y = 26 + i*48; g.beginPath(); g.arc(70, y, 13, 0, 2*PI); g.stroke(); g.fillRect(100, y-6, 110, 4); g.fillRect(100, y+4, 80, 3); }
+}, 1, 1, true);
+const std  = (color, o={}) => new THREE.MeshStandardMaterial(Object.assign({color, roughness:0.5, metalness:0.0, envMapIntensity:0.6}, o));
+const phys = (color, o={}) => new THREE.MeshPhysicalMaterial(Object.assign({color, roughness:0.32, metalness:0.0, clearcoat:0.8, clearcoatRoughness:0.12}, o));
+const M = {
+  yellow: phys(0xf7c200, {roughness:0.42, clearcoat:0.6, clearcoatRoughness:0.22, envMapIntensity:0.55, bumpMap:paintBump, bumpScale:0.0022}),   // порошковая краска PT114C, шагрень
+  orange: phys(0xe8552a, {roughness:0.5, clearcoat:0.35, bumpMap:paintBump, bumpScale:0.004}),
+  black:  std(0x1c1e22, {roughness:0.5, bumpMap:plasticBump, bumpScale:0.004}),       // глянцевый корпусной пластик
+  plast:  std(0x25282d, {roughness:0.78, bumpMap:plasticBump, bumpScale:0.012, roughnessMap:plasticBump}),  // матовый текстурированный пластик
+  rubber: std(0x18191c, {roughness:0.92, bumpMap:rubberBump, bumpScale:0.01}),
+  tire:   std(0xffffff, {map:treadTex, bumpMap:treadTex, bumpScale:0.035, roughness:0.9}),
+  grip:   std(0xffffff, {map:knurl, bumpMap:knurl, bumpScale:0.02, roughness:0.95}),
+  chrome: std(0xeef1f4, {metalness:1.0, roughness:0.07, envMapIntensity:1.1}),
+  alu:    std(0xc2c8d0, {metalness:0.9, roughness:0.38, roughnessMap:brushed, bumpMap:brushed, bumpScale:0.003, envMapIntensity:0.9}),
+  steel:  std(0xd0d5dc, {metalness:0.95, roughness:0.28, envMapIntensity:0.9}),
+  batt:   std(0x2f4a6b, {roughness:0.55, bumpMap:plasticBump, bumpScale:0.004}),
+  red:    std(0xffffff, {map:tailTex, emissive:0xffffff, emissiveMap:tailTex, emissiveIntensity:0.35, roughness:0.2}),
+  redCap: std(0xd8262b, {roughness:0.45}),
+  amber:  std(0xf08a00, {emissive:0x4a2a00, roughness:0.2}),
+  white:  std(0xf2f3f4, {roughness:0.5}),
+  qr:     std(0xffffff, {map:qrTex, roughness:0.4}),
+  screen: std(0xffffff, {map:screenTex, emissive:0xffffff, emissiveMap:screenTex, emissiveIntensity:0.55, roughness:0.08, metalness:0.1}),
+  lamp:   std(0xffffff, {map:lampTex, emissive:0xffffff, emissiveMap:lampTex, emissiveIntensity:0.7, roughness:0.05}),
+  led:    std(0x7dffb0, {emissive:0x19e070, emissiveIntensity:0.9}),
+  dial:   std(0xffffff, {map:dialTex, emissive:0xffffff, emissiveMap:dialTex, emissiveIntensity:0.6, roughness:0.08}),
+  battLbl: std(0xffffff, {map:battLabel, roughness:0.6}),
+  panel:  std(0xffffff, {map:panelTex, roughness:0.6, bumpMap:plasticBump, bumpScale:0.003}),
+  cable:  std(0x2a2d32, {roughness:0.55, bumpMap:rubberBump, bumpScale:0.004}),
+};
+// Цвета заданы в sRGB: переводим в линейное пространство, чтобы краска не выцветала
+Object.values(M).forEach(m => { m.color.convertSRGBToLinear(); if (m.emissive) m.emissive.convertSRGBToLinear(); });
+
+/* ---------- Помощники геометрии ---------- */
+const mesh = (g, m) => new THREE.Mesh(g, m);
+const at = (o,x,y,z) => { o.position.set(x,y,z); return o; };
+const box = (w,h,d,m,x,y,z,rz=0) => { const o = mesh(new THREE.BoxGeometry(w,h,d), m); o.position.set(x,y,z); o.rotation.z = rz; return o; };
+const rbox = (w,h,d,r,m,x,y,z,rz=0) => { const o = mesh(new THREE.RoundedBoxGeometry(w,h,d,4,Math.min(r, w/2-0.001, h/2-0.001, d/2-0.001)), m); o.position.set(x,y,z); o.rotation.z = rz; return o; };
+const cylZ = (r,h,m,x,y,z,seg=40) => { const o = mesh(new THREE.CylinderGeometry(r,r,h,seg), m); o.rotation.x = PI/2; o.position.set(x,y,z); return o; };
+const orient = (o,a,b) => { const d = new V3().subVectors(b,a); o.position.copy(a).add(b).multiplyScalar(0.5); o.quaternion.setFromUnitVectors(new V3(0,1,0), d.normalize()); return o; };
+const cylBetween = (a,b,r,m,seg=32,sz=1) => { const g = new THREE.CylinderGeometry(r,r,a.distanceTo(b),seg); if (sz !== 1) g.scale(1,1,sz); return orient(mesh(g, m), a, b); };
+const boxBetween = (a,b,w,d,m) => orient(mesh(new THREE.BoxGeometry(w,a.distanceTo(b),d), m), a, b);
+const rboxBetween = (a,b,w,d,r,m) => orient(mesh(new THREE.RoundedBoxGeometry(w,a.distanceTo(b),d,4,Math.min(r,w/2-0.001,d/2-0.001)), m), a, b);
+const tube = (pts, r, m, seg=90) => mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p => p.isVector3 ? p : new V3(...p))), seg, r, 10, false), m);
+const v = (x,y,z=0) => new V3(x,y,z);
+// Выдавливание плоского профиля (в плоскости XY) на глубину по Z, со скруглённой кромкой
+const ext = (shape, depth, m, bevel=0.04, z=0) => {
+  const g = new THREE.ExtrudeGeometry(shape, {depth: depth - 2*bevel, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 3, curveSegments: 32});
+  g.translate(0, 0, -(depth - 2*bevel)/2 + z);
+  return mesh(g, m);
+};
+// Контур со скруглёнными углами: [x, y, r?]
+const roundedShape = (pts, r=0.15) => {
+  const s = new THREE.Shape(), n = pts.length, V = i => new THREE.Vector2(pts[(i+n)%n][0], pts[(i+n)%n][1]);
+  for (let i = 0; i < n; i++) {
+    const c = V(i), p = V(i-1), q = V(i+1), rr = Math.min(pts[i][2] ?? r, c.distanceTo(p)/2, c.distanceTo(q)/2);
+    const a = c.clone().add(p.clone().sub(c).normalize().multiplyScalar(rr)), b = c.clone().add(q.clone().sub(c).normalize().multiplyScalar(rr));
+    i ? s.lineTo(a.x, a.y) : s.moveTo(a.x, a.y); s.quadraticCurveTo(c.x, c.y, b.x, b.y);
+  }
+  s.closePath(); return s;
+};
+const poly = pts => { const s = new THREE.Shape(); pts.forEach(([x,y],i) => i ? s.lineTo(x,y) : s.moveTo(x,y)); s.closePath(); return s; };
+const roundRectPath = (x0,y0,x1,y1,r, P=THREE.Path) => { const p = new P(); p.moveTo(x0+r,y0); p.lineTo(x1-r,y0); p.quadraticCurveTo(x1,y0,x1,y0+r); p.lineTo(x1,y1-r); p.quadraticCurveTo(x1,y1,x1-r,y1); p.lineTo(x0+r,y1); p.quadraticCurveTo(x0,y1,x0,y1-r); p.lineTo(x0,y0+r); p.quadraticCurveTo(x0,y0,x0+r,y0); return p; };
+// Шина: профиль со скруглёнными плечами, вращённый вокруг оси колеса
+const tireMesh = (c, Ro, Ri, W) => {
+  const h = W/2, pts = [];
+  pts.push(new THREE.Vector2(Ri, -h*0.75));
+  for (let i = 0; i <= 10; i++) { const a = -PI/2 + i/10*PI/2; pts.push(new THREE.Vector2(Ro - 0.16 + Math.cos(a)*0.16, -h + 0.16 + Math.sin(a)*0.16 + 0)); }
+  for (let i = 0; i <= 10; i++) { const a = i/10*PI/2; pts.push(new THREE.Vector2(Ro - 0.16 + Math.cos(a)*0.16, h - 0.16 + Math.sin(a)*0.16)); }
+  pts.push(new THREE.Vector2(Ri, h*0.75));
+  const g = new THREE.LatheGeometry(pts, 72); g.rotateX(PI/2);
+  const t = treadTex.clone(); t.needsUpdate = true; t.repeat.set(1, 1);
+  const m = M.tire.clone(); m.map = treadTex; treadTex.repeat.set(1, 1);
+  const o = mesh(g, m); o.position.copy(c); return o;
+};
+// Обод с N спицами: круг с вырезами-секторами
+const spokedRim = (c, Ro, depth, n, m, hub=0.26, spokeW=0.34, z=0) => {
+  const s = new THREE.Shape(); s.absarc(0,0,Ro,0,2*PI,false);
+  const ri = hub + 0.08, ro = Ro - 0.12, half = (2*PI/n - spokeW)/2;
+  for (let i = 0; i < n; i++) {
+    const mid = i*2*PI/n + PI/n, a1 = mid - half, a2 = mid + half;
+    const p = new THREE.Path(); p.moveTo(Math.cos(a1)*ri, Math.sin(a1)*ri);
+    p.absarc(0,0,ro,a1,a2,false); p.lineTo(Math.cos(a2)*ri, Math.sin(a2)*ri); p.absarc(0,0,ri,a2,a1,true);
+    s.holes.push(p);
+  }
+  const o = ext(s, depth, m, 0.03, z); o.position.add(c); return o;
+};
+// Крыло: дуга вокруг колеса (углы от +X против часовой, 90° — верх)
+const fenderArc = (c, Ri, Ro, a1, a2, width, m) => {
+  const s = new THREE.Shape(); s.absarc(0,0,Ro,a1,a2,false); s.absarc(0,0,Ri,a2,a1,true);
+  const o = ext(s, width, m, 0.025); o.position.add(c); return o;
+};
+const helix = (base, axis, n1, len, r, turns, m, rad=0.028) => {
+  const pts = [], n2 = new V3().crossVectors(axis, n1).normalize();
+  for (let i = 0; i <= turns*24; i++) { const t = i/(turns*24), a = t*PI*2*turns; pts.push(base.clone().addScaledVector(axis, t*len).addScaledVector(n1, Math.cos(a)*r).addScaledVector(n2, Math.sin(a)*r)); }
+  return tube(pts, rad, m, turns*48);
+};
+
+// Болт с шестигранной головкой и шлицем-звёздочкой; axis — куда смотрит головка
+const bolt = (pos, axis, r=0.055) => { const ax = axis.clone().normalize(), h = r*0.7;
+  return [cylBetween(pos, pos.clone().addScaledVector(ax, h), r, M.steel, 6), cylBetween(pos.clone().addScaledVector(ax, h-0.004), pos.clone().addScaledVector(ax, h+0.003), r*0.45, M.black, 6)]; };
+// Сварной шов: валик вокруг трубы
+const weld = (pos, axis, r, m=M.yellow) => { const o = mesh(new THREE.TorusGeometry(r, 0.035, 8, 40), m); o.position.copy(pos); o.quaternion.setFromUnitVectors(new V3(0,0,1), axis.clone().normalize()); return o; };
+
+/* ---------- Реестр деталей ---------- */
+const root = new THREE.Group(); scene.add(root);
+const parts = [];
+function part(code, name, group, objs, flags={}) {
+  objs = [].concat(objs);
+  const g = new THREE.Group();
+  const bb = new THREE.Box3(); objs.forEach(o => { o.updateMatrixWorld(); bb.expandByObject(o); });
+  const c = bb.getCenter(new V3());
+  objs.forEach(o => { o.position.sub(c); g.add(o); });
+  g.position.copy(c);
+  const p = {code, name, group, obj:g, flags, home:c.clone(), explode:c.clone(), layout:c.clone(), from:c.clone(), to:c.clone(), meshes:[],
+    layoutQ:new THREE.Quaternion(), layoutS:1, qFrom:new THREE.Quaternion(), qTo:new THREE.Quaternion(), sFrom:1, sTo:1};
+  g.userData.part = p;
+  g.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = true; o.receiveShadow = true;
+    const finish = o.material.clone();
+    const xr = new THREE.MeshBasicMaterial({color:GROUPS[group].color, transparent:true, depthWrite:false, side:THREE.DoubleSide});
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 28),
+      new THREE.LineBasicMaterial({color:GROUPS[group].color, transparent:true, opacity:0.55}));
+    edges.visible = false; o.add(edges);
+    o.material = finish;
+    p.meshes.push({mesh:o, finish, xr, edges, side:finish.side});
+  });
+  root.add(g); parts.push(p);
+  return p;
+}
+
+/* ---------- Геометрия YGW 5.0, версия 2 (пропорции сняты с фото сбоку) ----------
+   X — вдоль самоката (вперёд +X), Y — вверх, Z — поперёк (+Z справа по ходу). 1 ед. ≈ 10 см. */
+const tilt = 13 * PI/180;
+const dir = v(-Math.sin(tilt), Math.cos(tilt));       // рулевая ось
+const nf  = v(Math.cos(tilt), Math.sin(tilt));        // «вперёд» поперёк рулевой оси
+const A = v(4.4, 1.15);                               // ось переднего колеса (12″)
+const R = v(-4.38, 1.03);                             // ось заднего мотор-колеса
+const P = (k, dx=0, dy=0, dz=0) => A.clone().addScaledVector(dir, k).add(v(dx,dy,dz));
+const F = (k, off, dz=0) => P(k).addScaledVector(nf, off).add(v(0,0,dz)); // точка перед/за рулевой осью
+const T = P(10.1);                                    // центр руля
+const dtA = v(1.85,1.6), dtB = v(3.37,5.5);           // наклонная труба рамы
+const dtDir = new V3().subVectors(dtB, dtA).normalize(), dtN = v(-dtDir.y, dtDir.x);
+const DT = (t, off=0, z=0) => dtA.clone().lerp(dtB, t).addScaledVector(dtN, off).add(v(0,0,z));
+
+/* Рама и дека */
+const sidePlate = z => {
+  const s = roundedShape([[-2.4,0.8,0.05],[-3.5,0.78],[-4.55,0.72,0.2],[-4.92,0.92,0.25],[-5.08,1.35],[-5.22,1.9,0.3],[-5.4,2.22,0.15],[-5.4,2.45,0.08],[-4.0,2.45,0.4],[-2.7,1.9,0.3],[-2.4,1.9,0.05]], 0.18);
+  s.holes.push(roundRectPath(-4.85,1.55,-3.92,2.12,0.22));
+  return ext(s, 0.12, M.yellow, 0.035, z);
+};
+part('125HL50-01-0', 'Рама', 'frame', [
+  rbox(4.95,0.14,1.6,0.06, M.yellow, -0.18,0.85,0),
+  rbox(4.95,1.15,0.14,0.06, M.yellow, -0.18,1.355, 0.73), rbox(4.95,1.15,0.14,0.06, M.yellow, -0.18,1.355,-0.73),
+  rbox(0.16,1.15,1.6,0.06, M.yellow, 2.22,1.355,0), rbox(0.16,1.15,1.6,0.06, M.yellow, -2.58,1.355,0),
+  (() => {
+    const s = new THREE.Shape(), q = DT(0.25, 0.4125), tr = DT(1, 0.3), tf = DT(1, -0.3), bf = DT(0, -0.45), cap = DT(1.1, 0);
+    s.moveTo(0.95, 1.92); s.quadraticCurveTo(1.75, 1.97, q.x, q.y); s.lineTo(tr.x, tr.y);
+    s.quadraticCurveTo(cap.x, cap.y, tf.x, tf.y); s.lineTo(bf.x, bf.y); s.lineTo(2.3, 1.92); s.closePath();
+    return ext(s, 1.35, M.yellow, 0.1);
+  })(),
+  at(mesh(new THREE.SphereGeometry(0.42, 32, 20).scale(1,1,1.15), M.yellow), 3.37,5.5,0),
+  cylBetween(P(2.75), P(5.25), 0.3, M.yellow, 40),
+  sidePlate(0.74), sidePlate(-0.74),
+  weld(P(2.8), dir, 0.31),
+  ...[[-2.75,1.05],[-3.3,0.98],[-2.75,1.6],[-4.95,1.55]].flatMap(([x,y]) => [...bolt(v(x,y,0.8), v(0,0,1), 0.05), ...bolt(v(x,y,-0.8), v(0,0,-1), 0.05)]),
+], {shell:true});
+part('141HL50-01-0', 'Крышка батарейного отсека', 'frame', rbox(4.7,0.1,1.48,0.04, M.yellow, -0.2,1.975,0), {shell:true, ex:[0,1.3,0]});
+part('142ZD50-02-0', 'Резиновый коврик деки', 'frame', rbox(4.45,0.035,1.34,0.015, M.grip, -0.25,2.04,0), {ex:[0,2.0,0]});
+part('025HL50-01-0', 'Подножка', 'frame', [
+  cylBetween(v(1.95,0.8, 0.36), v(2.32,0.04, 0.52), 0.055, M.yellow),
+  cylBetween(v(1.95,0.8,-0.36), v(2.32,0.04,-0.52), 0.055, M.yellow),
+  cylBetween(v(2.34,0.05,-0.62), v(2.34,0.05,0.62), 0.05, M.yellow),
+  cylBetween(v(1.95,0.8,-0.42), v(1.95,0.8,0.42), 0.07, M.yellow)], {ex:[0.4,-0.6,0]});
+part('153ZD50-01-0', 'Отбойник подножки', 'frame', rbox(0.25,0.08,0.4,0.03, M.rubber, 1.7,0.74,0), {ex:[0,-1.1,0]});
+
+/* Руль и стойка */
+part('443HL50-01-0', 'Рулевая стойка с держателем IoT', 'steer', [
+  cylBetween(P(5.5), P(9.85), 0.24, M.yellow, 48)], {shell:true});
+part('446HL50-01-0', 'Хомут стойки', 'steer', [cylBetween(P(5.22), P(5.55), 0.3, M.yellow, 40), rbox(0.2,0.3,0.16,0.04, M.yellow, F(5.38,-0.34).x,F(5.38,-0.34).y,0, tilt), ...bolt(F(5.38,-0.34,0.08), v(0,0,1), 0.05), ...bolt(F(5.38,-0.34,-0.08), v(0,0,-1), 0.05)]);
+part('458HL50-01-0', 'Зажим штока вилки', 'steer', cylBetween(P(5.05), P(5.22), 0.31, M.black));
+part('405HL50-02-0', 'Руль', 'steer', cylZ(0.115,5.0, M.black, T.x,T.y,0));
+part('434HL50-01-0', 'Корпус выноса руля', 'steer', [rbox(0.75,0.55,0.95,0.16, M.yellow, T.x+0.04,T.y,0), rbox(0.7,0.05,0.88,0.02, M.black, T.x+0.04,T.y+0.27,0), ...bolt(v(T.x+0.42,T.y+0.15,0.3), v(1,0,0), 0.035), ...bolt(v(T.x+0.42,T.y+0.15,-0.3), v(1,0,0), 0.035)], {shell:true});
+part('419XH50-01-0', 'Нижняя крышка выноса', 'steer', rbox(0.5,0.42,0.72,0.12, M.yellow, T.x+0.06,T.y-0.42,0));
+const gripMesh = z => {
+  const pts = []; for (let i = 0; i <= 40; i++) { const y = -0.5 + i/40; pts.push(new THREE.Vector2(0.165 + 0.018*Math.max(0, Math.cos(i*PI/2.5)), y)); }
+  const g = new THREE.LatheGeometry(pts, 32); g.rotateX(PI/2); return at(mesh(g, M.rubber), T.x,T.y,z);
+};
+part('423XH22-11-0', 'Грипса левая',  'steer', gripMesh(-2.0));
+part('423XH22-12-0', 'Грипса правая', 'steer', gripMesh( 2.0));
+part('425XH22-03-0', 'Заглушка грипсы левая',  'steer', cylZ(0.19,0.08, M.black,  T.x,T.y,-2.54));
+part('425XH22-03-0', 'Заглушка грипсы правая', 'steer', cylZ(0.19,0.08, M.black, T.x,T.y, 2.54));
+part('471XX22-02-0', 'Звонок (красная кнопка)', 'steer', [cylZ(0.15,0.12, M.black, T.x+0.02,T.y,-1.45), cylBetween(v(T.x+0.02,T.y+0.12,-1.45), v(T.x+0.02,T.y+0.2,-1.45), 0.12, M.redCap, 32)]);
+part('484XH50-01-0', 'Держатель телефона', 'steer', [rbox(0.3,0.22,0.9,0.06, M.black, T.x+0.36,T.y+0.36,0), rbox(0.1,0.5,0.9,0.04, M.black, T.x+0.48,T.y+0.6,0, -0.1), rbox(0.24,0.08,0.86,0.03, M.black, T.x+0.38,T.y+0.88,0)], {ex:[0.6,4.6,0]});
+part('448XH50-02-0', 'Крючок для вещей', 'steer', tube([F(8.1,-0.5), F(8.1,-0.66), F(8.25,-0.72), F(8.38,-0.68)], 0.04, M.yellow, 24));
+
+/* Вилка и переднее колесо */
+part('329HL50-01-0', 'Шток вилки с траверсами', 'fork', [
+  cylBetween(P(2.2), P(5.3), 0.17, M.alu),
+  rbox(0.5,0.2,1.45,0.06, M.black, P(2.32).x,P(2.32).y,0, tilt),
+  rbox(0.5,0.2,1.45,0.06, M.black, P(2.62).x,P(2.62).y,0, tilt),
+  ...[2.32,2.62].flatMap(k => [-0.52,0.52].flatMap(z => bolt(F(k,0.25,z), nf, 0.045)))], {ex:[0.6,0.2,0]});
+part('456JY50-01-0', 'Подшипники рулевой колонки', 'fork', [cylBetween(P(2.72),P(2.78),0.31, M.black), cylBetween(P(5.22),P(5.28),0.31, M.black)]);
+const shock = z => [
+  cylBetween(A.clone().setZ(z), P(1.25,0,0,z), 0.14, M.yellow),
+  rbox(0.34,0.3,0.2,0.08, M.yellow, A.x,A.y,z),
+  cylBetween(P(1.2,0,0,z), P(2.7,0,0,z), 0.085, M.chrome),
+  cylBetween(P(1.22,0,0,z), P(1.32,0,0,z), 0.15, M.black)];
+part('326CD50-01-0', 'Амортизатор передний левый',  'fork', shock(-0.52));
+part('326CD50-02-0', 'Амортизатор передний правый', 'fork', shock( 0.52));
+part('613TZ12-02-0', 'Передний обод, 5 спиц', 'fork', [spokedRim(A, 0.74, 0.3, 5, M.yellow), cylZ(0.26,0.62, M.yellow, A.x,A.y,0), cylZ(0.3,0.05, M.alu, A.x,A.y,0.33), cylBetween(v(A.x,A.y+0.66,0.08), v(A.x,A.y+0.5,0.18), 0.025, M.steel, 12)], {shell:true});
+part('604LK12-02-0', 'Покрышка с камерой 12″', 'fork', tireMesh(A, 1.15, 0.7, 0.62), {shell:true, ex:[0,0,1.3]});
+part('832YX12-05-0', 'Ось переднего колеса', 'fork', cylZ(0.065,1.32, M.steel, A.x,A.y,0, 16), {ex:[0,0,-1.6]});
+part('817YX12-02-0', 'Гайка передней оси M12×1.25', 'fork', cylZ(0.1,0.08, M.steel, A.x,A.y,0.7, 6), {ex:[0,0,2.0]});
+
+/* Мотор-колесо */
+part('235JY36-01-0', 'Мотор-колесо с покрышкой', 'rear', [cylZ(0.64,0.4, M.yellow, R.x,R.y,0, 48), cylZ(0.3,0.56, M.black, R.x,R.y,0, 32), tireMesh(R, 1.03, 0.62, 0.6)], {shell:true});
+part('651YX50-02-0', 'Стопорная шайба оси, левая',  'rear', rbox(0.5,0.2,0.04,0.015, M.black, R.x+0.1,R.y,-0.83), {ex:[0,0,-1.0]});
+part('651YX50-02-0', 'Стопорная шайба оси, правая', 'rear', rbox(0.5,0.2,0.04,0.015, M.black, R.x+0.1,R.y, 0.83), {ex:[0,0, 1.0]});
+part('817YX12-01-0', 'Гайка задней оси, левая',  'rear', cylZ(0.12,0.1, M.black, R.x,R.y,-0.9, 5), {ex:[0,0,-1.5]});
+part('817YX12-01-0', 'Гайка задней оси, правая', 'rear', cylZ(0.12,0.1, M.black, R.x,R.y, 0.9, 5), {ex:[0,0, 1.5]});
+part('659XH50-01-0', 'Защитный колпак оси, левый',  'rear', at(mesh(new THREE.SphereGeometry(0.17,24,12,0,2*PI,0,PI/2).rotateX(-PI/2), M.yellow), R.x,R.y,-0.95), {ex:[0,0,-2.0]});
+part('659XH50-01-0', 'Защитный колпак оси, правый', 'rear', at(mesh(new THREE.SphereGeometry(0.17,24,12,0,2*PI,0,PI/2).rotateX( PI/2), M.yellow), R.x,R.y, 0.95), {ex:[0,0, 2.0]});
+part('195XH50-02-0', 'Кожух кабеля мотора', 'rear', rboxBetween(v(-3.0,0.95,0.83), v(-4.0,0.92,0.83), 0.18, 0.06, 0.02, M.black), {ex:[0,0,1.2]});
+
+/* Тормоза */
+part('523TZ80-07-0', 'Передний барабанный тормоз', 'brakes', [cylZ(0.42,0.12, M.black, A.x,A.y,-0.36), rbox(0.5,0.1,0.06,0.03, M.black, A.x-0.3,A.y+0.32,-0.44, -0.6)], {ex:[2.8,0,-2.0]});
+part('524TZ80-05-0', 'Задний барабанный тормоз', 'brakes', [
+  cylZ(0.5,0.04, M.yellow, R.x,R.y,-0.34),
+  rbox(0.62,0.1,0.06,0.03, M.black, R.x+0.62,R.y+0.12,-0.86, 0.2),
+  helix(v(R.x+0.95,R.y+0.2,-0.86), v(1,0.1,0).normalize(), v(0,1,0), 0.4, 0.05, 8, M.steel, 0.012)], {ex:[-2.8,0,-2.0]});
+const lever = s => [rbox(0.28,0.2,0.3,0.06, M.black, T.x+0.12,T.y,s*1.25), tube([v(T.x+0.18,T.y-0.02,s*1.3), v(T.x+0.45,T.y-0.12,s*1.7), v(T.x+0.52,T.y-0.16,s*2.25)], 0.045, M.black, 24)];
+part('262TZ50-01-0', 'Тормозная ручка левая',  'brakes', lever(-1), {ex:[0.6,3.0,-1.2]});
+part('262TZ50-02-0', 'Тормозная ручка правая', 'brakes', lever( 1), {ex:[0.6,3.0, 1.2]});
+part('513TZ50-02-0', 'Трос переднего тормоза', 'brakes', tube([v(T.x+0.12,T.y,1.1), v(T.x+0.55,T.y-0.9,0.4), F(7,0.3,0.12), F(4.6,0.42,0.2), F(3.0,0.38,-0.3), F(1.6,0.22,-0.62), v(A.x-0.25,A.y+0.4,-0.45)], 0.025, M.cable), {flex:true, ex:[1.0,0.6,1.8]});
+part('514TZ50-02-0', 'Трос заднего тормоза', 'brakes', tube([v(T.x+0.12,T.y,-1.1), v(T.x+0.55,T.y-0.9,-0.4), F(7,0.3,-0.12), F(5.0,0.36,-0.15), DT(0.7,0.36,-0.5), DT(0.1,0.3,-0.72), v(1.2,0.82,-0.82), v(-2.4,0.82,-0.82), v(-3.4,0.9,-0.9), v(R.x+1.0,R.y+0.2,-0.88)], 0.025, M.cable, 140), {flex:true, ex:[0,0.4,-1.8]});
+part('195XH50-03-0', 'Кожух тормозного троса', 'brakes', rboxBetween(v(-2.1,0.84,-0.83), v(-3.2,0.86,-0.83), 0.2, 0.06, 0.02, M.black), {ex:[0,0,-1.4]});
+
+/* Электроника */
+part('246SC21-01-0', 'Аккумулятор', 'elec', [
+  rbox(4.2,0.75,1.28,0.08, M.black, -0.2,1.3,0),
+  ...[-1.6,-0.8,0,0.8,1.6].map(x => rbox(0.08,0.05,1.2,0.02, M.plast, -0.2+x,1.7,0)),
+  (() => { const o = mesh(new THREE.PlaneGeometry(1.5,0.75), M.battLbl); o.rotation.x = -PI/2; o.position.set(0.3,1.682,0.1); return o; })(),
+  rbox(0.5,0.08,0.3,0.03, M.plast, -1.9,1.71,0)], {inner:true, ex:[0,0.3,-2.8]});
+part('150XH50-01-0', 'Передний держатель АКБ', 'elec', rbox(0.18,0.5,1.32,0.04, M.black, 2.02,1.3,0), {inner:true, ex:[0.6,0,-2.8]});
+part('150XH50-02-0', 'Задний держатель АКБ',   'elec', rbox(0.18,0.5,1.32,0.04, M.black, -2.42,1.3,0), {inner:true, ex:[-0.6,0,-2.8]});
+part('266JK50-01-0', 'Замок аккумуляторного отсека', 'elec', rbox(0.32,0.32,0.45,0.05, M.red, 2.12,1.6,0.42), {inner:true, ex:[0.4,0.6,-1.6]});
+part('216ST36-02-0', 'Контроллер (ECU)', 'elec', rboxBetween(DT(0.15), DT(0.6), 0.32, 0.7, 0.04, M.alu), {inner:true, ex:[0.8,0.6,-2.4]});
+part('264JL50-01-0', 'Главный кабель', 'elec', tube([v(1.6,1.55,0.2), DT(0.4,0,0.15), DT(0.95,0,0.1), P(5.5,0,0,0.1), P(7.5,0,0,0.1), P(9.7,0,0,0.08), v(T.x+0.05,T.y-0.1,0.2)], 0.035, M.cable), {inner:true, flex:true, ex:[0.6,0.6,-1.6]});
+part('703CC50-01-0', 'Фара', 'elec', [cylBetween(F(9.72,0.22), F(9.72,0.36), 0.25, M.black, 40), cylBetween(F(9.72,0.36), F(9.72,0.38), 0.19, M.lamp, 40)], {ex:[1.8,2.8,0]});
+part('280JK50-01-0', 'Дисплей', 'elec', (() => { const o = mesh(new THREE.CylinderGeometry(0.28,0.28,0.04,48), M.dial); o.position.set(T.x+0.12,T.y+0.31,0); return o; })(), {ex:[0.6,3.4,0]});
+part('277BK50-01-0', 'Пластина QR-кода', 'elec', rbox(0.26,0.02,0.26,0.01, M.qr, T.x-0.2,T.y+0.305,-0.25), {ex:[-0.4,3.4,-0.6]});
+part('268JK50-01-0', 'Кнопка света', 'elec', rbox(0.15,0.12,0.15,0.04, M.black, T.x+0.05,T.y+0.08,-0.62), {ex:[0.2,3.0,-1.0]});
+part('261WX50-01-0', 'Курок газа', 'elec', rbox(0.3,0.08,0.3,0.03, M.black, T.x+0.25,T.y-0.05,1.15, -0.4), {ex:[0.6,3.0,1.0]});
+part('773XD50-01-0', 'Статусный светодиод левый',  'elec', rboxBetween(F(9.0,-0.2,-0.1), F(9.75,-0.2,-0.1), 0.07, 0.04, 0.015, M.led), {ex:[0,2.6,-1.0]});
+part('773XD50-01-0', 'Статусный светодиод правый', 'elec', rboxBetween(F(9.0,-0.2, 0.1), F(9.75,-0.2, 0.1), 0.07, 0.04, 0.015, M.led), {ex:[0,2.6, 1.0]});
+part('205AN50-01-0', 'IoT-модуль', 'elec', [
+  cylBetween(F(7.45,-0.32), F(8.9,-0.32), 0.2, M.yellow, 32, 1.3),
+  at(mesh(new THREE.SphereGeometry(0.2,24,16).scale(1,1,1.3), M.yellow), F(7.45,-0.32).x,F(7.45,-0.32).y,0),
+  at(mesh(new THREE.SphereGeometry(0.2,24,16).scale(1,1,1.3), M.yellow), F(8.9,-0.32).x,F(8.9,-0.32).y,0),
+  at(mesh(new THREE.SphereGeometry(0.1,20,12).scale(0.5,1,1), M.lamp), F(8.95,-0.5).x,F(8.95,-0.5).y,0)], {ex:[-1.6,2.0,0]});
+part('272JK50-01-0', 'Цепной замок', 'elec', [rbox(0.36,0.42,0.48,0.06, M.black, F(7.15,-0.46).x,F(7.15,-0.46).y,0, tilt), rbox(0.06,0.12,0.16,0.02, M.red, F(7.2,-0.66).x,F(7.2,-0.66).y,0.08, tilt)], {ex:[-1.2,1.6,0]});
+part('279HQ50-01-0', 'Корпус крепления цепи', 'elec', rbox(0.06,0.6,0.5,0.02, M.plast, F(7.15,-0.26).x,F(7.15,-0.26).y,0, tilt), {ex:[-0.8,1.6,0]});
+part('279GF50-01-0', 'Цепь замка (спиральная)', 'elec', [helix(F(5.9,-0.52), dir, nf, 0.95, 0.17, 8, M.rubber, 0.035), tube([F(6.85,-0.52), F(6.95,-0.55), F(6.98,-0.5)], 0.03, M.rubber, 12)], {ex:[-1.8,1.0,0]});
+part('723SP50-01-0', 'Стоп-сигнал', 'elec', rbox(0.1,0.2,1.0,0.04, M.red, -5.46,2.6,0), {ex:[-1.6,1.0,0]});
+part('164ZD50-01-0', 'Заглушка зарядного порта', 'elec', cylZ(0.09,0.06, M.rubber, 1.6,1.45,-0.82, 20), {ex:[0,0,-1.6]});
+
+/* Пластик и номера */
+part('161XH50-01-0', 'Передняя накладка', 'body', rboxBetween(DT(0.27,0.535), DT(0.92,0.435), 0.05, 0.95, 0.02, M.panel), {shell:true, ex:[-0.6,1.6,0]});
+part('160HL50-01-0', 'Задний обтекатель', 'body', [
+  (() => { const s = new THREE.Shape();
+    s.moveTo(-2.45,1.93); s.lineTo(-2.45,2.06); s.bezierCurveTo(-3.0,2.08,-3.4,2.78,-4.1,2.78); s.lineTo(-5.28,2.78);
+    s.quadraticCurveTo(-5.46,2.78,-5.46,2.6); s.lineTo(-5.46,2.45); s.lineTo(-4.0,2.45); s.bezierCurveTo(-3.4,2.45,-3.1,1.93,-2.7,1.93); s.closePath();
+    return ext(s, 1.62, M.yellow, 0.06); })(),
+  (() => { const c = new THREE.CubicBezierCurve(new THREE.Vector2(-2.45,2.06), new THREE.Vector2(-3.0,2.08), new THREE.Vector2(-3.4,2.78), new THREE.Vector2(-4.1,2.78));
+    const pts = []; for (let i = 2; i <= 24; i++) pts.push(c.getPoint(i/24)); pts.push(new THREE.Vector2(-4.55,2.78));
+    const up = [], lo = [];
+    pts.forEach((p,i) => { const a = pts[Math.max(0,i-1)], b = pts[Math.min(pts.length-1,i+1)], t = b.clone().sub(a).normalize(), n = new THREE.Vector2(t.y, -t.x);
+      if (n.y < 0) n.negate(); lo.push(p.clone().addScaledVector(n, 0.065)); up.push(p.clone().addScaledVector(n, 0.105)); });
+    const s = new THREE.Shape(lo.concat(up.reverse()));
+    const gm = M.grip.clone(); gm.map = gm.bumpMap = M.grip.map.clone(); gm.map.needsUpdate = true; gm.map.repeat.set(1.2, 1.2);
+    return ext(s, 1.3, gm, 0.012); })()], {shell:true, ex:[-0.8,1.6,0]});
+part('643XH50-01-0', 'Заднее крыло (брызговик)', 'body', rboxBetween(v(-5.42,2.42), v(-5.92,0.95), 0.05, 0.95, 0.02, M.plast), {ex:[-1.6,0.4,0]});
+const platePlane = (tex, w, h, pos, ry, rz=0) => { const o = mesh(new THREE.PlaneGeometry(w, h), std(0xffffff, {map:tex, roughness:0.35})); o.rotation.order = 'ZYX'; o.rotation.set(0, ry, rz); o.position.copy(pos); return o; };
+const mudA = v(-5.42,2.42), mudB = v(-5.92,0.95), mudN = v(-0.947,0.322);
+const MUD = (t, off) => mudA.clone().lerp(mudB, t).addScaledVector(mudN, off);
+const rPlate = plateTex(['А000', 'АА'], 256, 256);
+part('169XH50-01-0', 'Держатель заднего номера', 'body', rboxBetween(MUD(0.08,0.04), MUD(0.66,0.04), 0.05, 1.15, 0.02, M.black), {ex:[-2.0,0.4,0]});
+part('932WM50-01-0', 'Задний номер (наклейка)', 'body', platePlane(rPlate, 1.0, 1.05, MUD(0.37,0.075), -PI/2, -0.328), {ex:[-2.6,0.4,0]});
+part('644XH50-01-0', 'Удлинитель заднего крыла', 'body', rbox(0.06,0.22,0.95,0.02, M.plast, -5.95,0.82,0, -0.33), {ex:[-2.2,-0.2,0]});
+part('633XH50-01-0', 'Переднее крыло', 'body', fenderArc(A, 1.24, 1.3, 50*PI/180, 172*PI/180, 0.62, M.plast), {shell:true, ex:[1.6,1.2,0]});
+const fPlate = plateTex(['А000', 'АА'], 256, 256), sPlate = plateTex(['А000АА'], 512, 128);
+part('446XH40-01-A', 'Держатель переднего номера', 'body', [cylBetween(P(4.6), P(5.0), 0.34, M.black), rbox(0.1,1.4,1.3,0.05, M.black, F(4.85,0.58).x,F(4.85,0.58).y,0, tilt), ...[[-0.52,-0.5],[-0.52,0.5],[0.52,-0.5],[0.52,0.5]].flatMap(([dk,z]) => bolt(F(4.85+dk,0.645,z), nf, 0.035))], {ex:[1.8,0.6,0]});
+part('932WM50-01-0', 'Передний номер (наклейка)', 'body', platePlane(fPlate, 1.12, 1.2, F(4.85,0.64), PI/2, tilt), {ex:[2.6,0.6,0]});
+part('938WM50-02-0', 'Боковой номер левый',  'body', platePlane(sPlate, 1.9, 0.48, v(-1.0,1.2,-0.815), PI), {ex:[0,0,-1.8]});
+part('938WM50-02-0', 'Боковой номер правый', 'body', platePlane(sPlate, 1.9, 0.48, v(-1.0,1.2, 0.815), 0), {ex:[0,0, 1.8]});
+part('744XH45-01-0', 'Держатель переднего катафота', 'body', rbox(0.12,0.42,0.34,0.04, M.black, F(3.45,0.32).x,F(3.45,0.32).y,0, tilt), {ex:[1.6,0,0]});
+part('743SP40-01-0', 'Передний катафот (белый)', 'body', rbox(0.03,0.34,0.26,0.01, M.white, F(3.45,0.39).x,F(3.45,0.39).y,0, tilt), {ex:[2.2,0,0]});
+part('763KG50-01-0', 'Боковой катафот левый',  'body', rbox(0.12,0.42,0.03,0.01, M.amber, P(0.7).x,P(0.7).y,-0.67, tilt), {ex:[0.6,0,-1.4]});
+part('763KG50-01-0', 'Боковой катафот правый', 'body', rbox(0.12,0.42,0.03,0.01, M.amber, P(0.7).x,P(0.7).y, 0.67, tilt), {ex:[0.6,0, 1.4]});
+part('934HL50-01-0', 'Шильдик (паспортная табличка)', 'body', boxBetween(DT(0.35,0,-0.69), DT(0.6,0,-0.69), 0.4, 0.02, M.steel), {ex:[0,0,-1.6]});
+
+/* Разнесённый вид: смещение группы + свой вектор детали */
+parts.forEach(p => {
+  const ge = GROUPS[p.group].ex, pe = p.flags.ex || [0,0,0];
+  p.explode.copy(p.home).add(v(ge[0]+pe[0], ge[1]+pe[1], ge[2]+pe[2]));
+});
+
+/* ---------- Раскладка «Все детали» ---------- */
+const order = Object.keys(GROUPS);
+const rowLabels = [];
+(function computeLayout() {
+  const gap = 0.45, rowGap = 0.8, maxW = 14;
+  const rows = [];
+  order.forEach(gk => {
+    let row = {group:gk, items:[], w:0, h:0, first:true};
+    parts.filter(p => p.group === gk).forEach(p => {
+      p.layoutS = p.flags.flex ? 0.3 : 1;
+      let size = new THREE.Box3().setFromObject(p.obj).getSize(new V3());
+      if (size.y > size.x * 1.4) p.layoutQ.setFromAxisAngle(new V3(0,0,1), PI/2 + tilt);
+      p.obj.quaternion.copy(p.layoutQ); p.obj.scale.setScalar(p.layoutS); p.obj.updateMatrixWorld(true);
+      size = new THREE.Box3().setFromObject(p.obj).getSize(new V3());
+      p.obj.quaternion.identity(); p.obj.scale.setScalar(1); p.obj.updateMatrixWorld(true);
+      if (row.w + size.x > maxW && row.items.length) { rows.push(row); row = {group:gk, items:[], w:0, h:0, first:false}; }
+      row.items.push({p, size, x: row.w + size.x/2}); row.w += size.x + gap; row.h = Math.max(row.h, size.y);
+    });
+    rows.push(row);
+  });
+  let y = 0;
+  rows.slice().reverse().forEach(r => { r.y = y + r.h/2; y += r.h + rowGap; });
+  const width = Math.max(...rows.map(r => r.w));
+  rows.forEach(r => {
+    const x0 = -width/2;
+    r.items.forEach(it => it.p.layout.set(x0 + it.x, r.y + 0.2, 0));
+    if (r.first) rowLabels.push({group:r.group, pos:new V3(x0 - 0.2, r.y + 0.2, 0)});
+  });
+})();
+
+const labelsEl = document.getElementById('labels');
+rowLabels.forEach(l => {
+  const d = document.createElement('div'); d.className = 'row-lbl'; d.textContent = GROUPS[l.group].name;
+  d.style.color = GROUPS[l.group].color; d.hidden = true; labelsEl.appendChild(d); l.el = d;
+});
+
+/* ---------- Легенда и покрытие каталога ---------- */
+const groupsEl = document.getElementById('groups');
+let isolated = null;
+order.forEach(gk => {
+  const n = parts.filter(p => p.group === gk).length;
+  const li = document.createElement('li'), c = GROUPS[gk].color;
+  li.innerHTML = `<button type="button" aria-pressed="false" data-g="${gk}"><span class="dot" style="background:${c}"></span><span class="nm">${GROUPS[gk].name}</span><span class="n" style="color:${c};background:${c}1f">${n}</span></button>`;
+  groupsEl.appendChild(li);
+});
+groupsEl.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  isolated = isolated === b.dataset.g ? null : b.dataset.g;
+  groupsEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.g === isolated));
+  applyLook();
+});
+const legend = document.getElementById('legend'), tl = document.getElementById('toggleLegend');
+if (matchMedia('(max-width:700px)').matches) legend.classList.add('collapsed');
+tl.addEventListener('click', () => { const c = legend.classList.toggle('collapsed'); tl.textContent = c ? 'группы ▾' : 'скрыть ▴'; tl.setAttribute('aria-expanded', !c); });
+
+const total = parts.length, countEl = document.getElementById('count');
+const catTotal = Object.keys(CATALOG).length;
+const covered = new Set(parts.map(p => p.code).filter(c => CATALOG[c])).size;
+document.getElementById('catTotal').textContent = catTotal;
+document.getElementById('covered').textContent = covered;
+(function countUp(t0) {
+  const step = now => { const k = reduceMotion ? 1 : Math.min(1, (now - t0)/1400); countEl.textContent = Math.round(total * (1 - Math.pow(1-k,3))); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+})(performance.now());
+requestAnimationFrame(() => document.getElementById('bar').style.width = (covered/catTotal*100).toFixed(1) + '%');
+
+/* ---------- Режимы ---------- */
+let mode = 'finished', selected = null, hovered = null;
+const cutPlane = new THREE.Plane(new V3(0,0,-1), 0.02), CLIP = [cutPlane];
+const NOTES = {
+  finished:'Собранный самокат',
+  xray:'Корпус прозрачный: видно аккумулятор, контроллер и проводку',
+  cut:'Продольный разрез: дека, шея рамы, стойка и колёса',
+  explode:'Узлы разведены по группам',
+  layout:'Все детали по группам',
+};
+const HL = new THREE.Color(0x8a6a00), HOV = new THREE.Color(0x3a2d00);
+function applyLook() {
+  parts.forEach(p => {
+    const sel = p === selected, hov = p === hovered;
+    const ghost = isolated && p.group !== isolated;
+    p.meshes.forEach(m => {
+      const xray = mode === 'xray';
+      m.mesh.material = xray ? m.xr : m.finish;
+      m.edges.visible = xray && !ghost;
+      if (xray) {
+        m.xr.opacity = ghost ? 0.03 : sel ? 0.85 : p.flags.inner ? 0.7 : 0.13;
+      } else {
+        const f = m.finish;
+        const clip = mode === 'cut' && p.flags.shell ? CLIP : null;
+        if ((f.clippingPlanes||null) !== clip) { f.clippingPlanes = clip; f.side = clip ? THREE.DoubleSide : m.side; f.needsUpdate = true; }
+        const wantT = !!ghost;
+        if (f.transparent !== wantT) { f.transparent = wantT; f.needsUpdate = true; }
+        f.opacity = ghost ? 0.1 : 1; f.depthWrite = !ghost;
+        if (!m.baseEm) m.baseEm = f.emissive.clone();
+        f.emissive.copy(sel ? HL : hov ? HOV : m.baseEm);
+      }
+      m.mesh.castShadow = !ghost && mode !== 'xray';
+    });
+  });
+  ground.visible = mode !== 'xray' && mode !== 'layout';
+  setPost(mode);
+}
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('#modes button').forEach(b => b.setAttribute('aria-selected', b.dataset.mode === m));
+  document.getElementById('modeNote').textContent = NOTES[m];
+  const key = m === 'explode' ? 'explode' : m === 'layout' ? 'layout' : 'home', lay = m === 'layout';
+  parts.forEach(p => {
+    p.from.copy(p.obj.position); p.to.copy(p[key]);
+    p.qFrom.copy(p.obj.quaternion); lay ? p.qTo.copy(p.layoutQ) : p.qTo.identity();
+    p.sFrom = p.obj.scale.x; p.sTo = lay ? p.layoutS : 1;
+  });
+  tweenStart = performance.now();
+  rowLabels.forEach(l => l.el.hidden = m !== 'layout');
+  applyLid();
+  frameCamera(m);
+  applyLook();
+}
+document.getElementById('modes').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.mode); });
+
+/* ---------- Камера ---------- */
+let camTween = null;
+function fitDist(radius) {
+  const vf = camera.fov * PI/180, hf = 2*Math.atan(Math.tan(vf/2)*camera.aspect);
+  return radius / Math.sin(Math.min(vf, hf)/2);
+}
+function frameCamera(m, instant) {
+  let target, dirv, radius;
+  if (m === 'layout') {
+    const bb = new THREE.Box3(); parts.forEach(p => bb.expandByPoint(p.layout));
+    target = bb.getCenter(new V3()); const s = bb.getSize(new V3());
+    target.x -= 1.2; target.y -= 0.4;
+    radius = Math.max(s.x/2 + 3.2, s.y/2 + 3.4); target.y += 0.6; dirv = v(0, 0.08, 1).normalize();
+  } else {
+    target = v(-0.6, 5.4, 0);
+    radius = m === 'explode' ? 8.8 : 7.0;
+    dirv = m === 'cut' ? v(0.2, 0.25, 1).normalize() : v(0.55, 0.3, 0.95).normalize();
+  }
+  const pos = target.clone().addScaledVector(dirv, fitDist(radius));
+  if (instant || reduceMotion) { camera.position.copy(pos); controls.target.copy(target); camTween = null; return; }
+  camTween = {t0:performance.now(), p0:camera.position.clone(), q0:controls.target.clone(), p1:pos, q1:target};
+}
+
+/* ---------- Выбор детали ---------- */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const tip = document.getElementById('tip');
+/* Снять / поставить крышку аккумуляторного отсека */
+let lidOff = false;
+const lidParts = parts.filter(p => p.code === '141HL50-01-0' || p.code === '142ZD50-02-0');
+const lidBtn = document.getElementById('lidBtn');
+function applyLid() {
+  const hide = lidOff && mode !== 'layout' && mode !== 'explode';
+  lidParts.forEach(p => { p.obj.visible = !hide; if (hide && selected === p) select(null); });
+}
+lidBtn.addEventListener('click', () => {
+  lidOff = !lidOff; lidBtn.setAttribute('aria-pressed', lidOff);
+  lidBtn.textContent = lidOff ? 'Поставить крышку АКБ' : 'Снять крышку АКБ';
+  applyLid();
+});
+function pick(ev) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.set(((ev.clientX - r.left)/r.width)*2 - 1, -((ev.clientY - r.top)/r.height)*2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects(root.children, true).filter(h => h.object.isMesh);
+  for (const h of hits) {
+    let o = h.object; while (o && !o.userData.part) o = o.parent;
+    const p = o && o.userData.part; if (!p || !p.obj.visible) continue;
+    if (isolated && p.group !== isolated) continue;
+    if (mode === 'cut' && p.flags.shell && h.point.z > cutPlane.constant) continue;
+    return p;
+  }
+  return null;
+}
+let downAt = null;
+renderer.domElement.addEventListener('pointerdown', e => downAt = {x:e.clientX, y:e.clientY});
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return;
+  select(pick(e));
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse') return;
+  const p = pick(e);
+  if (p !== hovered) { hovered = p; applyLook(); renderer.domElement.style.cursor = p ? 'pointer' : ''; }
+  if (p) { tip.hidden = false; tip.textContent = p.name; tip.style.left = e.clientX + 'px'; tip.style.top = e.clientY + 'px'; }
+  else tip.hidden = true;
+});
+renderer.domElement.addEventListener('pointerleave', () => { tip.hidden = true; hovered = null; applyLook(); });
+
+const card = document.getElementById('card'), img = document.getElementById('cardImg'), ph = document.getElementById('cardPh');
+img.addEventListener('error', () => ph.hidden = true);
+img.addEventListener('load', () => ph.hidden = false);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function select(p) {
+  selected = p; applyLook();
+  if (!p) { card.hidden = true; return; }
+  const g = GROUPS[p.group], c = CATALOG[p.code];
+  document.getElementById('cardDot').style.background = g.color;
+  document.getElementById('cardGroup').textContent = g.name;
+  document.getElementById('cardName').textContent = p.name;
+  document.getElementById('cardSub').textContent = c ? [c[0], c[1]].filter(Boolean).join(' · ') : 'Нет в листе Catalog, есть на листе узла';
+  ph.hidden = true; img.src = 'thumbs/' + encodeURIComponent(p.code) + '.jpg';
+  const rows = [['Артикул', `${esc(p.code)}<button class="copy" type="button" id="copyBtn">копировать</button>`]];
+  if (c) {
+    rows.push(['На самокат', `${esc(c[2])} ${esc((c[3]||'').toLowerCase() === 'pc' ? 'шт.' : (c[3]||'').toLowerCase() === 'st' ? 'компл.' : c[3])}`]);
+    if (c[4] != null) rows.push(['Цена 2025', esc(typeof c[4] === 'number' ? c[4].toFixed(2) : c[4])]);
+    if (c[5] != null) rows.push(['MOQ', esc(c[5])]);
+    if (c[6] != null) rows.push(['Срок поставки', esc(c[6]) + (typeof c[6] === 'number' ? ' дн.' : '')]);
+    rows.push(['Тип', c[7] === 'EE' ? 'электрика (EE)' : 'механика (ME)']);
+  }
+  document.getElementById('cardDl').innerHTML = rows.map(([k,v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  document.getElementById('copyBtn').addEventListener('click', ev => {
+    const b = ev.currentTarget;
+    Promise.resolve().then(() => navigator.clipboard.writeText(p.code)).then(() => b.textContent = 'скопировано', () => {
+      const r = document.createRange(); r.selectNodeContents(b.parentNode.firstChild.parentNode); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    });
+  });
+  card.hidden = false;
+}
+document.getElementById('cardClose').addEventListener('click', () => select(null));
+
+/* ---------- Цикл ---------- */
+let tweenStart = 0;
+const DUR = reduceMotion ? 1 : 950;
+const ease = k => k < 0.5 ? 4*k*k*k : 1 - Math.pow(-2*k + 2, 3)/2;
+const tmp = new V3();
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false); renderer.domElement.style.width = w+'px'; renderer.domElement.style.height = h+'px';
+  composer.setPixelRatio(PR); composer.setSize(w, h);
+  fxaaPass.material.uniforms.resolution.value.set(1/(w*PR), 1/(h*PR));
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', () => { resize(); frameCamera(mode, true); });
+
+function loop(now) {
+  parts.forEach((p, i) => {
+    const k = Math.min(1, Math.max(0, (now - tweenStart - i*6) / DUR)), e = ease(k);
+    p.obj.position.lerpVectors(p.from, p.to, e);
+    p.obj.quaternion.slerpQuaternions(p.qFrom, p.qTo, e);
+    p.obj.scale.setScalar(p.sFrom + (p.sTo - p.sFrom) * e);
+  });
+  if (camTween) {
+    const k = Math.min(1, (now - camTween.t0)/1100), e = ease(k);
+    camera.position.lerpVectors(camTween.p0, camTween.p1, e);
+    controls.target.lerpVectors(camTween.q0, camTween.q1, e);
+    if (k >= 1) camTween = null;
+  }
+  controls.update();
+  composer.render();
+  if (mode === 'layout') {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    rowLabels.forEach(l => { tmp.copy(l.pos).project(camera); l.el.style.left = ((tmp.x+1)/2*w) + 'px'; l.el.style.top = ((1-tmp.y)/2*h) + 'px'; });
+  }
+  requestAnimationFrame(loop);
+}
+
+resize();
+frameCamera('finished', true);
+setMode('finished');
+requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
