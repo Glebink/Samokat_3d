@@ -130,7 +130,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--f-display);overflow:
     <header class="head">
       <h1>Электросамокат<span>YGW 5.0</span></h1>
       <p>Детали привязаны к каталогу запчастей: артикул, количество, цена и фото. Нажмите на деталь, чтобы открыть её карточку.</p>
-      <div class="head-row"><span class="stage-tag">Версия 5 · 1,16 × 1,22 м</span><button class="lid-btn" id="lidBtn" type="button" aria-pressed="false">Снять крышку АКБ</button></div>
+      <div class="head-row"><span class="stage-tag">Версия 8 · 1,16 × 1,22 м</span><button class="lid-btn" id="lidBtn" type="button" aria-pressed="false">Снять крышку АКБ</button></div>
     </header>
 
     <aside class="legend" id="legend">
@@ -530,6 +530,14 @@ function tireV4(c, Ro, Rr, W, rep) {
 const wheelLathe = (c, prof, m, seg = 72) => { const g = new THREE.LatheGeometry(prof.map(([r, z]) => new THREE.Vector2(r, z)), seg); g.rotateX(PI/2); const o = mesh(g, ds(m)); o.position.set(c.x, c.y, 0); return o; };
 const polar = (c, r, deg, z = 0) => new V3(c.x + r*Math.cos(deg*PI/180), c.y + r*Math.sin(deg*PI/180), z);
 
+// Сварной шов-валик с рябью: трубка вдоль точек, радиус пульсирует (чешуйки шва)
+const weldBead = (pts, r = 0.032) => {
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal'), L = curve.getLength(), segs = Math.max(24, Math.round(L / 0.02));
+  const g = new THREE.TubeGeometry(curve, segs, r, 8, false), p = g.attributes.position;
+  for (let i = 0; i <= segs; i++) { const c = curve.getPointAt(Math.min(1, i / segs)), k = 0.74 + 0.34 * Math.pow(Math.abs(Math.cos(i * PI / 3)), 0.7);
+    for (let j = 0; j <= 8; j++) { const n = i * 9 + j; p.setXYZ(n, c.x + (p.getX(n) - c.x) * k, c.y + (p.getY(n) - c.y) * k, c.z + (p.getZ(n) - c.z) * k); } }
+  g.computeVertexNormals(); return mesh(g, M.yellow); };
+
 /* ---------- Реестр деталей ---------- */
 const root = new THREE.Group(); scene.add(root);
 const parts = [];
@@ -581,7 +589,7 @@ const Fd = (k, off, dz=0) => Pd(k).addScaledVector(nf, off).add(v(0,0,dz));
 const P = (k, dx=0, dy=0, dz=0) => Pd(Kmap(k), dx, dy, dz);
 const F = (k, off, dz=0) => P(k).addScaledVector(nf, off).add(v(0,0,dz)); // точка перед/за рулевой осью
 const T = P(10.1);                                    // центр руля
-const dtA = v(1.85,1.6), dtB = Pd(H0 - 0.42);           // наклонная труба рамы
+const dtA = v(2.3,1.6), dtB = Pd(H0 - 0.42);           // наклонная труба рамы
 const dtDir = new V3().subVectors(dtB, dtA).normalize(), dtN = v(-dtDir.y, dtDir.x);
 const DT = (t, off=0, z=0) => dtA.clone().lerp(dtB, t).addScaledVector(dtN, off).add(v(0,0,z));
 
@@ -598,10 +606,13 @@ part('125HL50-01-0', 'Рама', 'frame', [
     const g = new THREE.ExtrudeGeometry(roundedShape(pts, 0.02), {depth: 3.96, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.012, bevelSegments: 2, curveSegments: 6});
     g.translate(0, 0, -1.98); g.rotateY(PI/2); g.translate(0.21, 0, 0); return mesh(g, M.yellow); })(),
   rbox(0.16,1.15,1.6,0.06, M.yellow, 2.22,1.355,0), rbox(0.16,1.15,1.6,0.06, M.yellow, -1.8,1.355,0),
+  plateAt(roundedShape([[2.2,0.82,0.02],[2.6,0.82,0.1],[2.94,1.25,0.16],[2.94,1.88,0.03],[2.2,1.88,0.02]]), v(0,0,-0.74), new V3(0,1,0), Z3, 1.48, M.yellow, 0.06),
+  weldBead([v(1.92,1.965,-0.665), v(2.5,1.965,-0.67), v(2.93,1.965,-0.66), v(3.03,1.965,-0.55), v(3.05,1.965,0), v(3.03,1.965,0.55), v(2.93,1.965,0.66), v(2.5,1.965,0.67), v(1.92,1.965,0.665)], 0.034),
+  ...[1,-1].map(sd => weldBead([0.17,0.35,0.55,0.75,0.92].map(t => DT(t, -(0.45 - 0.15*t) - 0.03).add(v(0,0, sd*(0.675*(1 - 0.34*t) - 0.035)))), 0.028)),
   (() => {
-    const s = new THREE.Shape(), q = DT(0.25, 0.4125), tr = DT(1, 0.3), tf = DT(1, -0.3), bf = DT(0, -0.45), cap = DT(1.1, 0);
-    s.moveTo(0.95, 1.92); s.quadraticCurveTo(1.75, 1.97, q.x, q.y); s.lineTo(tr.x, tr.y);
-    s.quadraticCurveTo(cap.x, cap.y, tf.x, tf.y); s.lineTo(bf.x, bf.y); s.lineTo(2.3, 1.92); s.closePath();
+    const s = new THREE.Shape(), q = DT(0.12, 0.41), tr = DT(1, 0.3), tf = DT(1, -0.3), bf = DT(0, -0.45), cap = DT(1.1, 0);
+    s.moveTo(1.78, 1.93); s.quadraticCurveTo(1.99, 1.95, q.x, q.y); s.lineTo(tr.x, tr.y);   // сзади — короткая галтель в деку
+    s.quadraticCurveTo(cap.x, cap.y, tf.x, tf.y); s.lineTo(bf.x, bf.y); s.lineTo(2.2, 1.5); s.lineTo(2.14, 1.93); s.closePath();
     const o = ext(s, 1.35, M.yellow, 0.1), g = o.geometry, pp = g.attributes.position, nn = g.attributes.normal, L = dtA.distanceTo(dtB);
     for (let i = 0; i < pp.count; i++) {   // сужение трубы кверху: 15 см у деки → 10 см у рулевого стакана
       const t = Math.min(1, Math.max(0, ((pp.getX(i)-dtA.x)*dtDir.x + (pp.getY(i)-dtA.y)*dtDir.y) / L)), k = 1 - 0.34*t;
@@ -614,36 +625,42 @@ part('125HL50-01-0', 'Рама', 'frame', [
   weld(P(2.5), dir, 0.31),
   ...[[-1.35,1.05],[-1.9,0.98],[-2.0,1.7],[-3.22,1.5]].flatMap(([x,y]) => [...bolt(v(x,y,0.8), v(0,0,1), 0.05), ...bolt(v(x,y,-0.8), v(0,0,-1), 0.05)]),
 ], {shell:true});
-part('141HL50-01-0', 'Крышка батарейного отсека', 'frame', rbox(3.92,0.1,1.48,0.04, M.yellow, 0.19,1.975,0), {shell:true, ex:[0,1.3,0]});
-part('142ZD50-02-0', 'Резиновый коврик деки', 'frame', rbox(3.67,0.035,1.34,0.015, M.grip, 0.14,2.04,0), {ex:[0,2.0,0]});
+part('141HL50-01-0', 'Крышка батарейного отсека', 'frame', rbox(3.57,0.1,1.48,0.04, M.yellow, 0.015,1.975,0), {shell:true, ex:[0,1.3,0]});
+part('142ZD50-02-0', 'Резиновый коврик деки', 'frame', rbox(3.41,0.035,1.34,0.015, M.grip, 0.01,2.04,0), {ex:[0,2.0,0]});
 [[0.36,'правая передняя'],[0.36,'правая задняя'],[-0.36,'левая передняя'],[-0.36,'левая задняя']].forEach(([z,n],i) =>
   part('182ZD50-01-0', 'Резиновая направляющая АКБ, ' + n, 'frame', rbox(1.66,0.025,0.16,0.01, M.rubber, i%2 ? -0.66 : 1.04, 0.93, z), {inner:true, ex:[0,-0.6, z*1.5]}));
 part('183YX50-01-0', 'Стальная пластина скрытого люка', 'frame', rbox(0.28,0.18,0.025,0.01, M.black, -2.45,0.95,0.665), {inner:true, ex:[0,-0.4,1.2]});
 /* Детали под крышкой АКБ (видны только снизу крышки, снимаются вместе с ней) */
 part('147HC50-01-0', 'Язычок замка крышки АКБ', 'frame', [rbox(0.14,0.1,0.22,0.03, M.steel, -1.66,1.88,0), rbox(0.05,0.12,0.12,0.015, M.steel, -1.74,1.81,0)], {lid:true, ex:[-0.3,1.0,0]});
-part('148ZD50-01-0', 'Демпфер крышки АКБ, правый', 'frame', rbox(3.6,0.02,0.07,0.01, M.rubber, 0.19,1.915, 0.66), {lid:true, ex:[0,1.0,0.5]});
-part('148ZD50-01-0', 'Демпфер крышки АКБ, левый',  'frame', rbox(3.6,0.02,0.07,0.01, M.rubber, 0.19,1.915,-0.66), {lid:true, ex:[0,1.0,-0.5]});
-part('145ZD50-01-0', 'Прямоугольная прокладка крышки АКБ', 'frame', rbox(0.37,0.03,0.26,0.01, M.rubber, 1.92,1.91,-0.45), {lid:true, ex:[0.4,1.0,0]});
+part('148ZD50-01-0', 'Демпфер крышки АКБ, правый', 'frame', rbox(3.3,0.02,0.07,0.01, M.rubber, 0.04,1.915, 0.66), {lid:true, ex:[0,1.0,0.5]});
+part('148ZD50-01-0', 'Демпфер крышки АКБ, левый',  'frame', rbox(3.3,0.02,0.07,0.01, M.rubber, 0.04,1.915,-0.66), {lid:true, ex:[0,1.0,-0.5]});
+part('145ZD50-01-0', 'Прямоугольная прокладка крышки АКБ', 'frame', rbox(0.37,0.03,0.26,0.01, M.rubber, 1.55,1.91,-0.45), {lid:true, ex:[0.4,1.0,0]});
 part('145ZD50-02-0', 'Прокладка крышки АКБ с выступами, правая', 'frame', rbox(0.22,0.03,0.26,0.01, M.rubber, -1.45,1.91, 0.45), {lid:true, ex:[-0.4,1.0,0.3]});
 part('145ZD50-02-0', 'Прокладка крышки АКБ с выступами, левая',  'frame', rbox(0.22,0.03,0.26,0.01, M.rubber, -1.45,1.91,-0.45), {lid:true, ex:[-0.4,1.0,-0.3]});
-part('025HL50-01-0', 'Подножка', 'frame', [
-  rbox(0.26,0.12,0.18,0.04, M.yellow, 1.92,0.73,-0.52),
-  cylZ(0.05,0.24, M.steel, 1.92,0.72,-0.52, 16),
-  loft([v(1.93,0.72,-0.56), v(2.0,0.58,-0.6), v(2.14,0.32,-0.66), v(2.25,0.12,-0.7), v(2.29,0.05,-0.71)], [[0.055,0.055],[0.055,0.055],[0.052,0.052],[0.05,0.05],[0.05,0.05]], M.yellow, {seg:20}),
-  rbox(0.26,0.045,0.14,0.018, M.yellow, 2.33,0.025,-0.71)], {ex:[0.4,-0.6,-0.4]});
-part('153ZD50-01-0', 'Отбойник подножки', 'frame', rbox(0.16,0.06,0.2,0.025, M.rubber, 1.75,0.74,-0.52), {ex:[0,-1.1,0]});
+/* Центральная подножка (по фото спереди): литой кронштейн по центру передней грани носа деки, под наклонной трубой;
+   поперечные винты M8; П-образная стойка, ноги расходятся влево и вправо от центра, между ними перемычка */
+const KS = [v(2.96,0.04,-0.5), v(2.95,0.12,-0.49), v(2.91,0.3,-0.46), v(2.87,0.48,-0.42), v(2.84,0.56,-0.33), v(2.83,0.59,-0.15),
+            v(2.83,0.59,0.15), v(2.84,0.56,0.33), v(2.87,0.48,0.42), v(2.91,0.3,0.46), v(2.95,0.12,0.49), v(2.96,0.04,0.5)];
+part('025HL50-01-0', 'Подножка (кронштейн и стойка)', 'frame', [
+  plateAt(roundedShape([[2.62,0.6,0.04],[3.0,0.6,0.06],[3.0,0.74,0.06],[2.96,0.86,0.05],[2.93,1.1,0.08],[2.7,1.1,0.08],[2.62,0.95,0.04]]), v(0,0,-0.15), new V3(0,1,0), Z3, 0.3, M.yellow, 0.03),
+  tube(KS, 0.05, M.yellow, 120),
+  cylBetween(v(2.91,0.28,-0.46), v(2.91,0.28,0.46), 0.04, M.yellow, 16),
+  ...[-1,1].map(sd => { const o = rbox(0.17,0.045,0.1,0.02, M.yellow, 2.98,0.025,sd*0.5); o.rotation.y = sd*0.25; return o; })], {ex:[1.0,-0.6,0]});
+part('808YX08-03-0', 'Винты кронштейна подножки M8 (2 шт.)', 'frame', [[2.8,0.98],[2.9,0.68]].flatMap(([x,y]) => [
+  latheAlong(v(x,y,-0.18), v(x,y,-0.23), [[0,0.06],[0.8,0.06],[1,0.05]], M.black, 20), cylBetween(v(x,y,-0.228), v(x,y,-0.235), 0.025, std(0x050505), 6)]), {ex:[1.0,-0.6,-0.8]});
+part('153ZD50-01-0', 'Отбойник подножки', 'frame', rbox(0.22,0.05,0.5,0.02, M.rubber, 2.3,0.735,0), {ex:[0,-1.1,0]});
 
 /* Руль и стойка */
 part('443HL50-01-0', 'Рулевая стойка с держателем IoT', 'steer', [
   latheAlong(P(5.5), P(9.56), [[0,0.248],[0.33,0.248],[0.334,0.256],[0.36,0.256],[0.364,0.244],[1,0.236]], M.yellow, 56)], {shell:true});
-part('446HL50-01-0', 'Хомут стойки', 'steer', [cylBetween(P(5.22), P(5.6), 0.31, M.black, 40), rbox(0.16,0.3,0.2,0.04, M.black, F(5.4,-0.36).x,F(5.4,-0.36).y,0, tilt), ...bolt(F(5.4,-0.36,0.1), v(0,0,1), 0.05), ...bolt(F(5.4,-0.36,-0.1), v(0,0,-1), 0.05)]);
-part('820ST08-01-0', 'Шайба стопорная M8, правая', 'steer', cylZ(0.07,0.02, M.steel, F(5.4,-0.36).x,F(5.4,-0.36).y, 0.11, 24), {ex:[0.9,1.2,0.6]});
-part('820ST08-01-0', 'Шайба стопорная M8, левая',  'steer', cylZ(0.07,0.02, M.steel, F(5.4,-0.36).x,F(5.4,-0.36).y,-0.11, 24), {ex:[0.9,1.2,-0.6]});
+part('446HL50-01-0', 'Хомут стойки (внутри рамки номера)', 'steer', [latheAlong(Pd(H0+0.0), Pd(H0+0.52), [[0,0.282],[0.08,0.294],[0.92,0.294],[1,0.282]], std(0x1c1d20, {metalness:0.6, roughness:0.4}), 40), ...bolt(Fd(H0+0.14,0,0.294), Z3, 0.032), ...bolt(Fd(H0+0.38,0,0.294), Z3, 0.032)], {inner:true, ex:[0.9,1.6,0]});
+part('820ST08-01-0', 'Шайба стопорная M8, правая', 'steer', cylBetween(F(7.15,-0.64,0.12), F(7.15,-0.665,0.12), 0.055, M.steel, 24), {ex:[-0.9,1.2,0.6]});
+part('820ST08-01-0', 'Шайба стопорная M8, левая',  'steer', cylBetween(F(7.15,-0.64,-0.12), F(7.15,-0.665,-0.12), 0.055, M.steel, 24), {ex:[-0.9,1.2,-0.6]});
 part('822YX23-01-0', 'Большая плоская шайба штока', 'fork', cylBetween(P(5.25), P(5.27), 0.2, M.steel, 32), {inner:true, ex:[0.6,1.6,0]});
 part('457DL50-01-0', 'Стяжной болт штока вилки M23×1', 'fork', [cylBetween(P(5.27), P(5.33), 0.14, M.black, 6)], {inner:true, ex:[0.6,1.9,0]});
 part('448XH50-01-0', 'Клипса кабеля на стойке, нижняя', 'steer', rbox(0.08,0.14,0.16,0.02, M.black, F(6.3,-0.25).x,F(6.3,-0.25).y,0, tilt), {ex:[-0.6,2.2,0]});
 part('448XH50-01-0', 'Клипса кабеля на стойке, верхняя', 'steer', rbox(0.08,0.14,0.16,0.02, M.black, F(8.5,-0.25).x,F(8.5,-0.25).y,0, tilt), {ex:[-0.6,2.6,0]});
-part('458HL50-01-0', 'Зажим штока вилки', 'steer', cylBetween(P(5.05), P(5.22), 0.31, M.black));
+part('458HL50-01-0', 'Стакан-фиксатор стойки (зажим штока вилки)', 'steer', [latheAlong(Pd(H0-0.3), Pd(H0+0.62), [[0,0.215],[0.04,0.225],[1,0.225]], std(0x2a2c30, {metalness:0.55, roughness:0.4}), 32), rbox(0.08,0.5,0.12,0.02, std(0x2a2c30, {metalness:0.55, roughness:0.4}), Fd(H0+0.0,-0.23).x,Fd(H0+0.0,-0.23).y,0, tilt)], {inner:true, ex:[0.6,2.4,0]});
 part('405HL50-02-0', 'Руль', 'steer', cylZ(0.115,4.5, M.black, T.x,T.y,0));
 const HEAD = [[9.5,0.236,0.236,2],[9.7,0.27,0.27,2.2],[9.88,0.33,0.32,2.8],[10.05,0.38,0.36,3.4],[10.2,0.395,0.375,3.8],[10.3,0.395,0.375,3.8]];
 part('434HL50-01-0', 'Корпус выноса руля', 'steer', [
@@ -717,8 +734,10 @@ part('651YX50-02-0', 'Стопорная шайба оси, левая',  'rear'
 part('651YX50-02-0', 'Стопорная шайба оси, правая', 'rear', rbox(0.5,0.2,0.04,0.015, M.black, R.x+0.1,R.y, 0.83), {ex:[0,0, 1.0]});
 part('817YX12-01-0', 'Гайка задней оси, левая',  'rear', cylZ(0.12,0.1, M.black, R.x,R.y,-0.9, 5), {ex:[0,0,-1.5]});
 part('817YX12-01-0', 'Гайка задней оси, правая', 'rear', cylZ(0.12,0.1, M.black, R.x,R.y, 0.9, 5), {ex:[0,0, 1.5]});
-part('659XH50-01-0', 'Защитный колпак оси, левый',  'rear', at(mesh(new THREE.SphereGeometry(0.17,24,12,0,2*PI,0,PI/2).rotateX(-PI/2), M.yellow), R.x,R.y,-0.95), {ex:[0,0,-2.0]});
-part('659XH50-01-0', 'Защитный колпак оси, правый', 'rear', at(mesh(new THREE.SphereGeometry(0.17,24,12,0,2*PI,0,PI/2).rotateX( PI/2), M.yellow), R.x,R.y, 0.95), {ex:[0,0, 2.0]});
+part('659XH50-01-0', 'Защитный колпак оси, левый', 'rear', [plateAt(roundedShape([[-0.15,-0.21,0.14],[0.15,-0.21,0.14],[0.15,0.2,0.07],[-0.15,0.2,0.07]]), v(R.x, R.y+0.06, -0.95), v(0,1,0), Z3.clone().multiplyScalar(-1), 0.08, M.yellow, 0.035),
+  ...bolt(v(R.x-0.07,R.y+0.19,-1.065), Z3.clone().multiplyScalar(-1), 0.03), ...bolt(v(R.x+0.07,R.y+0.19,-1.065), Z3.clone().multiplyScalar(-1), 0.03)], {ex:[0,0,-1*2.0]});
+part('659XH50-01-0', 'Защитный колпак оси, правый', 'rear', [plateAt(roundedShape([[-0.15,-0.21,0.14],[0.15,-0.21,0.14],[0.15,0.2,0.07],[-0.15,0.2,0.07]]), v(R.x, R.y+0.06, 0.95), v(0,1,0), Z3.clone().multiplyScalar(1), 0.08, M.yellow, 0.035),
+  ...bolt(v(R.x-0.07,R.y+0.19,1.065), Z3.clone().multiplyScalar(1), 0.03), ...bolt(v(R.x+0.07,R.y+0.19,1.065), Z3.clone().multiplyScalar(1), 0.03)], {ex:[0,0,1*2.0]});
 part('195XH50-02-0', 'Кожух кабеля мотора', 'rear', rboxBetween(v(-1.6,0.95,0.83), v(-2.6,0.92,0.83), 0.18, 0.06, 0.02, M.black), {ex:[0,0,1.2]});
 part('235JY36-01-0-01', 'Внутренняя стопорная шайба оси мотора', 'rear', [rbox(0.45,0.2,0.03,0.01, M.black, R.x+0.08,R.y,0.66), rbox(0.45,0.2,0.03,0.01, M.black, R.x+0.08,R.y,-0.66)], {inner:true, ex:[0,0,0.7]});
 
@@ -765,7 +784,7 @@ part('272JK50-01-0', 'Цепной замок', 'elec', [rbox(0.36,0.42,0.48,0.0
 part('279HQ50-01-0', 'Корпус крепления цепи', 'elec', rbox(0.06,0.6,0.5,0.02, M.plast, F(7.15,-0.26).x,F(7.15,-0.26).y,0, tilt), {ex:[-0.8,1.6,0]});
 part('279CR50-01-0', 'Заглушка винта корпуса цепи, правая', 'elec', cylBetween(F(7.36,-0.46,0.13), F(7.39,-0.46,0.13), 0.04, M.plast, 12), {ex:[-1.2,2.0,0.4]});
 part('279CR50-01-0', 'Заглушка винта корпуса цепи, левая',  'elec', cylBetween(F(7.36,-0.46,-0.13), F(7.39,-0.46,-0.13), 0.04, M.plast, 12), {ex:[-1.2,2.0,-0.4]});
-part('448HL50-01-0', 'Фиксатор цепного замка (металл)', 'elec', rbox(0.1,0.2,0.16,0.02, std(0x202226, {metalness:0.7, roughness:0.35}), F(5.72,-0.25).x,F(5.72,-0.25).y,0, tilt), {ex:[-1.4,1.2,0]});
+part('448HL50-01-0', 'Фиксатор цепного замка (металл)', 'elec', rbox(0.1,0.2,0.16,0.02, std(0x202226, {metalness:0.7, roughness:0.35}), Fd(H0+1.0,-0.27).x,Fd(H0+1.0,-0.27).y,0, tilt), {ex:[-1.4,1.2,0]});
 part('279GF50-01-0', 'Цепь замка (спиральная)', 'elec', [helix(F(5.9,-0.52), dir, nf, 0.6, 0.17, 8, M.rubber, 0.035), tube([F(6.85,-0.52), F(6.95,-0.55), F(6.98,-0.5)], 0.03, M.rubber, 12)], {ex:[-1.8,1.0,0]});
 part('264JL50-03-0', 'DC-разъём зарядки (переходник рамы)', 'elec', [rboxBetween(DT(0.9,0.5), DT(0.97,0.47), 0.1, 0.32, 0.02, M.black), tube([DT(0.93,0.4,0.08), DT(0.8,0.1,0.12), DT(0.55,0.05,0.12)], 0.025, M.cable, 16)], {ex:[-0.6,1.8,0]});
 part('164ZD50-01-0', 'Заглушка зарядного порта', 'elec', rboxBetween(DT(0.9,0.56), DT(0.97,0.53), 0.04, 0.24, 0.015, M.rubber), {ex:[-0.9,2.0,0]});
@@ -785,8 +804,9 @@ const TAIL = (() => {
   const hw = h => { for (let i = 1; i < HW.length; i++) if (h <= HW[i][0] || i === HW.length - 1) {
     const [h0, w0] = HW[i-1], [h1, w1] = HW[i]; return K * (w0 + (w1 - w0) * (h - h0) / (h1 - h0)); } };
   const P3 = (u, h, z) => new V3(X0 - S*u, Y0 + S*h, z);
-  const OUT = [[0,0],[2.02,0],[2.12,0.24],[2.43,1.27],[2.40,1.31],[1.48,1.28],[1.30,1.24],[1.18,1.17],[0.06,0.12],[0,0.06]];
-  const WIN = [[0.86,0.16],[1.52,0.16],[1.52,0.64],[1.34,0.64]];
+  const OUT = [[0,0],[2.02,0],[2.26,0.26],[2.43,1.27],[2.40,1.31],[1.48,1.28],[1.30,1.24],[1.18,1.17],[0.06,0.12],[0,0.06]];
+  const WIN = (() => { const p = roundedShape([[0.88,0.15],[1.72,0.15],[1.72,0.64],[1.4,0.64]], 0.07).getPoints(4).map(v2 => [v2.x, v2.y]);
+    const a = p[0], b = p[p.length-1]; if (Math.hypot(a[0]-b[0], a[1]-b[1]) < 1e-6) p.pop(); return p; })();   // окно по фото: передняя кромка параллельна наклону
   const TOP = [[0,0.06],[0.06,0.12],[1.18,1.17],[1.30,1.24],[1.48,1.28],[2.40,1.31]];
   const topAt = u => { for (let i = 1; i < TOP.length; i++) if (u <= TOP[i][0]) { const [a,b] = TOP[i-1], [c,d] = TOP[i]; return b + (d-b)*(u-a)/(c-a); } return 1.31; };
   // обрезка многоугольника горизонтальной полосой (Сазерленд–Ходжмен)
@@ -807,7 +827,13 @@ const TAIL = (() => {
       const idx = THREE.ShapeUtils.triangulateShape(contour, holes), all = contour.concat(...holes);
       const pos = [], uv = [];
       idx.forEach(t => t.forEach(k => { const p = all[k]; const q = P3(p.x, p.y, side * hw(p.y)); pos.push(q.x, q.y, q.z); uv.push(p.x, p.y); }));
-      meshes.push(new THREE.Mesh(geo(pos, uv), paint));
+      // снаружи — краска, изнутри — затенённая полость (видна через окно)
+      // снаружи — краска, изнутри — затенённая полость: две отдельные поверхности с противоположным обходом
+      const flip = (p, t) => { const P2 = [], T2 = []; for (let i = 0; i < p.length; i += 9) { P2.push(...p.slice(i, i+3), ...p.slice(i+6, i+9), ...p.slice(i+3, i+6)); }
+        for (let i = 0; i < t.length; i += 6) { T2.push(...t.slice(i, i+2), ...t.slice(i+4, i+6), ...t.slice(i+2, i+4)); } return [P2, T2]; };
+      const g1 = geo(pos, uv), out = g1.attributes.normal.getZ(0) * side > 0, [fp, fu] = flip(pos, uv), g2 = geo(fp, fu);
+      const outer = M.yellow.clone(), inner = std(0x3b3418, {roughness:0.9}); outer.side = inner.side = THREE.FrontSide;
+      meshes.push(new THREE.Mesh(out ? g1 : g2, outer), new THREE.Mesh(out ? g2 : g1, inner));
     });
     // торцевые кромки толщиной 5 мм: по контуру и вокруг окна
     const rim = (loop) => { const pos = [], uv = [];
@@ -824,28 +850,28 @@ const TAIL = (() => {
       const a = P3(u0,h0,-hw(h0)), b = P3(u0,h0,hw(h0)), c = P3(u1,h1,hw(h1)), d = P3(u1,h1,-hw(h1));
       [a,b,c, a,c,d].forEach(r => pos.push(r.x, r.y, r.z)); uv.push(u0,0, u0,1, u1,1, u0,0, u1,1, u1,0); }
     return new THREE.Mesh(geo(pos, uv), paint); };
-  meshes.push(strip([[1.30,1.24],[1.48,1.28],[2.40,1.31],[2.43,1.27],[2.12,0.24]]));
+  meshes.push(strip([[1.30,1.24],[1.48,1.28],[2.40,1.31],[2.43,1.27],[2.26,0.26]]));
   // чашка под стоп-сигнал на задней стенке
-  const fa = [2.12,0.24], fb = [2.43,1.27], fc = [fa[0] + 0.6*(fb[0]-fa[0]), fa[1] + 0.6*(fb[1]-fa[1])];
-  const fn = new V3(-1.03, -0.31, 0).normalize(), tiltR = Math.atan2(fb[0]-fa[0], fb[1]-fa[1]);
+  const fa = [2.26,0.26], fb = [2.43,1.27], fc = [fa[0] + 0.6*(fb[0]-fa[0]), fa[1] + 0.6*(fb[1]-fa[1])];
+  const fn = new V3(-(fb[1]-fa[1]), -(fb[0]-fa[0]), 0).normalize(), tiltR = Math.atan2(fb[0]-fa[0], fb[1]-fa[1]);
   const cupC = P3(fc[0], fc[1], 0);
   const cup = rbox(0.06, 0.38, 0.93, 0.025, M.yellow, cupC.x + fn.x*0.02, cupC.y + fn.y*0.02, 0, tiltR); meshes.push(cup);
   // резиновая накладка на наклоне: трапеция, сужается назад, с дугообразными рёбрами
-  const pad = (() => { const N = 16, pos = [], uv = [], sec = [];
-    for (let i = 0; i <= N; i++) { const u = 0.03 + (1.30 - 0.03) * i / N, ht = topAt(u) + 0.012, hb = Math.max(0.0, ht - 0.14), w = hw(ht) - (0.24 - 0.18 * i / N);
-      sec.push({u, s: i / N, pts: [P3(u, ht, -w), P3(u, ht, w), P3(u, hb, w), P3(u, hb, -w)]}); }
-    const quad = (a, b, c, d, ua) => { [a,b,c, a,c,d].forEach(r => pos.push(r.x, r.y, r.z)); uv.push(...ua); };
+  const padW = u => 0.54 - 0.16 * u / 1.3, padTop = u => 0.36 + (1.25 - 0.36) * u / 1.3, padBot = u => Math.max(0.005, topAt(u) - 0.06);
+  const pad = (() => { const N = 24, pos = [], uv = [], sec = [], c = 0.05;
+    for (let i = 0; i <= N; i++) { const u = 1.3 * i / N, ht = padTop(u), hb = padBot(u), w = padW(u);
+      sec.push({s: i / N, pts: [P3(u, ht, -w + c), P3(u, ht, w - c), P3(u, ht - c, w), P3(u, hb, w), P3(u, hb, -w), P3(u, ht - c, -w)]}); }
+    const quad = (a, b, cc, d, ua) => { [a,b,cc, a,cc,d].forEach(r => pos.push(r.x, r.y, r.z)); uv.push(...ua); }, Z12 = new Array(12).fill(0);
     for (let i = 0; i < N; i++) { const A = sec[i], B = sec[i+1];
-      quad(A.pts[0], A.pts[1], B.pts[1], B.pts[0], [A.s,0, A.s,1, B.s,1, A.s,0, B.s,1, B.s,0]);   // верх
-      for (const [p, q] of [[1,2],[2,3],[3,0]]) quad(A.pts[p], A.pts[q], B.pts[q], B.pts[p], [0,0,0,0,0,0,0,0,0,0,0,0]); }
-    const f = sec[0].pts, l = sec[N].pts;
-    quad(f[0], f[3], f[2], f[1], new Array(12).fill(0)); quad(l[0], l[1], l[2], l[3], new Array(12).fill(0));
-    const gm = M.grip.clone(); gm.side = THREE.DoubleSide; gm.map = gm.bumpMap = M.grip.map.clone(); gm.map.needsUpdate = true; gm.map.repeat.set(7, 1);
+      quad(A.pts[0], A.pts[1], B.pts[1], B.pts[0], [A.s,0, A.s,1, B.s,1, A.s,0, B.s,1, B.s,0]);   // верх с рёбрами
+      for (let j = 1; j < 6; j++) quad(A.pts[j], A.pts[(j+1)%6], B.pts[(j+1)%6], B.pts[j], Z12); }
+    [sec[0].pts, sec[N].pts].forEach(f => { for (let j = 1; j < 5; j++) { [f[0], f[j], f[j+1]].forEach(r => pos.push(r.x, r.y, r.z)); uv.push(0,0,0,0,0,0); } });
+    const gm = M.grip.clone(); gm.side = THREE.DoubleSide; gm.map = gm.bumpMap = M.grip.map.clone(); gm.map.needsUpdate = true; gm.map.repeat.set(6, 1);
     return new THREE.Mesh(geo(pos, uv), gm); })();
   meshes.push(pad);
   // жёлтый уступ между боковиной и накладкой (на детали — скошенная кромка шириной ~3 см)
   [1, -1].forEach(side => { const pos = [], uv = [], N = 16;
-    for (let i = 0; i < N; i++) { const q = [i, i+1].map(k => { const u = 0.03 + 1.27 * k / N, ht = topAt(u); return [u, ht, hw(ht), hw(ht) - (0.24 - 0.18 * k / N)]; });
+    for (let i = 0; i < N; i++) { const q = [i, i+1].map(k => { const u = 0.03 + 1.27 * k / N, ht = topAt(u); return [u, ht, hw(ht), padW(u)]; });
       const a = P3(q[0][0], q[0][1], side*q[0][2]), b = P3(q[1][0], q[1][1], side*q[1][2]), c = P3(q[1][0], q[1][1] + 0.01, side*q[1][3]), d = P3(q[0][0], q[0][1] + 0.01, side*q[0][3]);
       [a,b,c, a,c,d].forEach(r => pos.push(r.x, r.y, r.z)); uv.push(0,0, 1,0, 1,1, 0,0, 1,1, 0,1); }
     meshes.push(new THREE.Mesh(geo(pos, uv), paint)); });
@@ -855,17 +881,20 @@ part('160HL50-01-0', 'Задний обтекатель (по 3D-скану)', '
 part('723SP50-01-0', 'Стоп-сигнал', 'elec', rbox(0.1,0.26,0.8,0.045, M.red, TAIL.cupC.x + TAIL.fn.x*0.07, TAIL.cupC.y + TAIL.fn.y*0.07, 0, TAIL.tiltR), {ex:[-1.6,1.0,0]});
 part('170ZD50-01-0', 'Пыльник заднего обтекателя', 'body', rbox(0.06,0.07,1.3,0.02, M.rubber, -1.83,1.97,0), {ex:[-0.4,1.2,0]});
 part('264JL50-05-0', 'Переходной кабель стоп-сигнала', 'elec', tube([v(-1.7,1.7,0.3), v(-2.4,1.95,0.35), v(-2.9,2.3,0.3), v(TAIL.cupC.x+0.12,TAIL.cupC.y,0.15)], 0.022, M.cable, 30), {inner:true, flex:true, ex:[-1.0,1.4,0.6]});
-part('643XH50-01-0', 'Заднее крыло (брызговик)', 'body', rboxBetween(v(-3.72,2.15), v(-4.2,0.95), 0.05, 0.95, 0.02, M.plast), {ex:[-1.6,0.4,0]});
+part('643XH50-01-0', 'Заднее крыло', 'body', (() => { const sh = new THREE.Shape();
+  sh.moveTo(-3.05, 2.2); sh.lineTo(-4.0, 2.2); sh.quadraticCurveTo(-4.14, 2.2, -4.14, 2.06); sh.lineTo(-4.17, 1.0); sh.quadraticCurveTo(-4.17, 0.84, -4.04, 0.815);
+  sh.absarc(R.x, R.y, 1.08, 191.5*PI/180, 98*PI/180, true); sh.closePath();
+  return plateAt(sh, v(0, 0, -0.33), v(0,1,0), Z3, 0.66, M.plast, 0.03); })(), {shell:true, ex:[-1.6,0.4,0]});
 const platePlane = (tex, w, h, pos, ry, rz=0) => { const o = mesh(new THREE.PlaneGeometry(w, h), std(0xffffff, {map:tex, roughness:0.35})); o.rotation.order = 'ZYX'; o.rotation.set(0, ry, rz); o.position.copy(pos); return o; };
-const mudA = v(-3.72,2.15), mudB = v(-4.2,0.95), mudN = v(-0.929,0.371);
+const mudA = v(-4.17,2.12), mudB = v(-4.2,1.0), mudN = v(-0.9996,0.027);
 const MUD = (t, off) => mudA.clone().lerp(mudB, t).addScaledVector(mudN, off);
 const rPlate = plateTex(['А000', 'АА'], 256, 256);
 part('169XH50-01-0', 'Основание держателя номера', 'body', rbox(0.34,0.1,0.8,0.03, M.black, mudA.x+0.12,mudA.y+0.03,0), {ex:[-1.4,0.7,0]});
 part('169XH50-01-A', 'Кронштейн заднего номера (сборка)', 'body', rboxBetween(MUD(0.0,0.025), MUD(0.12,0.025), 0.16, 0.92, 0.03, M.black), {ex:[-1.7,0.5,0]});
 part('446XH50-01-02', 'Подложка заднего номера', 'body', rboxBetween(MUD(0.08,0.045), MUD(0.66,0.045), 0.04, 1.15, 0.02, M.black), {ex:[-2.0,0.4,0]});
 part('804YX04-23-0', 'Алюминиевые заклёпки номера (4 шт.)', 'body', [0.14,0.6].flatMap(t => [-0.45,0.45].map(z => { const p = MUD(t,0.08).add(v(0,0,z)); return cylBetween(p, p.clone().add(mudN.clone().multiplyScalar(0.025)), 0.035, M.alu, 12); })), {ex:[-2.8,0.4,0]});
-part('932WM50-01-0', 'Задний номер (наклейка)', 'body', platePlane(rPlate, 1.0, 1.05, MUD(0.37,0.075), -PI/2, -0.38), {ex:[-2.6,0.4,0]});
-part('644XH50-01-0', 'Удлинитель заднего крыла', 'body', rbox(0.06,0.22,0.95,0.02, M.plast, -4.23,0.82,0, -0.38), {ex:[-2.2,-0.2,0]});
+part('932WM50-01-0', 'Задний номер (наклейка)', 'body', platePlane(rPlate, 1.0, 1.05, MUD(0.37,0.075), -PI/2, -0.027), {ex:[-2.6,0.4,0]});
+part('644XH50-01-0', 'Удлинитель заднего крыла', 'body', rbox(0.12,0.1,0.62,0.035, M.plast, -4.08,0.79,0, 0.25), {ex:[-2.2,-0.2,0]});
 part('633XH50-01-0', 'Переднее крыло', 'body', [
   arcShell(A, 1.38, 22, 200, 0.56, 0.1, M.plast),
   (() => { const sh = new THREE.Shape(), a1 = 114*PI/180, a2 = 196*PI/180;
@@ -873,16 +902,47 @@ part('633XH50-01-0', 'Переднее крыло', 'body', [
     const g = new THREE.ExtrudeGeometry(sh, {depth:0.03, bevelEnabled:true, bevelThickness:0.01, bevelSize:0.01, bevelSegments:2, curveSegments:32});
     const o = mesh(g, M.plast); o.position.set(A.x, A.y, -0.31); return o; })()], {shell:true, ex:[1.6,1.2,0]});
 const fPlate = plateTex(['А000', 'АА'], 256, 256), sPlate = plateTex(['А000АА'], 512, 128);
-const NB = H0 - 0.645;   // центр коробки номера: её верх у шарнира
-part('446XH40-01-A', 'Держатель переднего номера', 'body', [cylBetween(Pd(NB-0.25), Pd(NB+0.2), 0.34, M.black), rbox(0.26,1.25,1.32,0.09, M.black, Fd(NB,0.66).x,Fd(NB,0.66).y,0, tilt), ...[[-0.5,-0.52],[-0.5,0.52],[0.5,-0.52],[0.5,0.52]].flatMap(([dk,z]) => bolt(Fd(NB+dk,0.79,z), nf, 0.035))], {ex:[1.8,0.6,0]});
-part('932WM50-01-0', 'Передний номер (наклейка)', 'body', platePlane(fPlate, 1.1, 1.1, Fd(NB,0.8), PI/2, tilt), {ex:[2.6,0.6,0]});
+/* Крепление переднего номера (по фото и листу Front number plate set):
+   хомут из двух половин обхватывает основание стойки над сваркой рамы; передняя половина переходит в клин и квадратную площадку. */
+const NBc = H0 + 0.25, NBu = NBc - 0.12, NR = 0.39, NRi = 0.3, SEAM = 0.035;
+const ringSector = (ri, ro, a1, a2, k0, h, m, bev = 0.025) => { const sh = new THREE.Shape(); sh.absarc(0,0,ro,a1,a2,false); sh.absarc(0,0,ri,a2,a1,true);
+  return plateAt(sh, Pd(k0 + bev), Z3, dir, h - 2*bev, m, bev); };
+const halfRing = (a1, a2, m) => [ringSector(NRi, NR, a1, a2, NBc-0.31, 0.62, m), ringSector(NRi, NR+0.028, a1, a2, NBc-0.31, 0.075, m, 0.022), ringSector(NRi, NR+0.028, a1, a2, NBc+0.235, 0.075, m, 0.022)];
+const ringPt = (th, k, r = NR + 0.004) => Pd(k).addScaledVector(nf, -r*Math.cos(th)).addScaledVector(Z3, r*Math.sin(th));   // угол th: 0 — назад, ±π/2 — бока
+const darkM = std(0x07080a, {roughness:0.95});
+const oval = (p, n, w, h) => { const o = mesh(new THREE.SphereGeometry(1, 24, 12), darkM); o.scale.set(w, h, 0.012); o.quaternion.setFromUnitVectors(Z3, n.clone().normalize()); o.position.copy(p); return o; };
+const NSCR = [[-1,0.19],[-1,-0.19],[1,0.19],[1,-0.19]].map(([sd, du]) => { const th = sd*(PI/2 - 0.5); return {p: ringPt(th, NBc+du), n: ringPt(th, NBc+du, 1).sub(Pd(NBc+du))}; });
+part('446XH50-01-0', 'Передняя половина крепления номера с площадкой', 'body', [
+  ...halfRing(PI/2 + SEAM, 3*PI/2 - SEAM, M.plast),
+  plateAt(roundedShape([[0.12,-0.32,0.06],[0.62,-0.66,0.04],[0.62,0.62,0.04],[0.12,0.34,0.06]], 0.06), Pd(NBu).addScaledVector(Z3, -0.39), dir, Z3, 0.78, M.plast, 0.035),
+  plateAt(roundedShape([[-0.66,-0.66],[0.66,-0.66],[0.66,0.66],[-0.66,0.66]], 0.09), Pd(NBu).addScaledVector(nf, 0.6), dir, nf, 0.05, M.plast, 0.02),
+  ...[1,-1].flatMap(sd => { const base = Pd(NBu).addScaledVector(Z3, sd*0.428), n = Z3.clone().multiplyScalar(sd);
+    return [plateAt(roundedShape([[0.27,-0.42],[0.55,-0.5],[0.55,0.34],[0.27,0.24]].map(([x,y]) => [x*sd, y]), 0.05), base, dir, n, 0.004, darkM),
+            ...[-0.2, 0.06].map(du => oval(base.clone().addScaledVector(nf, 0.42).addScaledVector(dir, du).addScaledVector(n, 0.006), n, 0.075, 0.075))]; })
+], {shell:true, ex:[1.6,0.5,0]});
+part('446XH50-02-0', 'Задняя половина крепления номера', 'body', [
+  ...halfRing(-PI/2 + SEAM, PI/2 - SEAM, M.plast),
+  ...NSCR.map(({p, n}) => oval(p, n, 0.085, 0.05))], {shell:true, ex:[-1.2,0.5,0]});
+part('805YX05-23-0', 'Стяжные винты крепления номера M5×30 (4 шт.)', 'body',
+  NSCR.flatMap(({p, n}) => [cylBetween(p.clone().addScaledVector(n, -0.03), p.clone().addScaledVector(n, -0.005), 0.038, M.steel, 16)]), {ex:[-2.0,0.5,0]});
+part('446XH50-01-0-03', 'Резиновая вставка хомута номера', 'body', ringSector(NRi-0.02, NRi, PI/2+0.3, 3*PI/2-0.3, NBc-0.2, 0.4, M.rubber, 0.005), {inner:true, ex:[1.0,0.8,0]});
+part('446XH50-01-0-02', 'Подложка переднего номера', 'body', [
+  plateAt(roundedShape([[-0.65,-0.65],[0.65,-0.65],[0.65,0.65],[-0.65,0.65]], 0.08), Pd(NBu).addScaledVector(nf, 0.69), dir, nf, 0.02, M.black, 0.004),
+  (() => { const sh = roundedShape([[-0.65,-0.65],[0.65,-0.65],[0.65,0.65],[-0.65,0.65]], 0.08); sh.holes.push(roundedShape([[-0.6,-0.6],[0.6,-0.6],[0.6,0.6],[-0.6,0.6]], 0.05));
+    return plateAt(sh, Pd(NBu).addScaledVector(nf, 0.714), dir, nf, 0.018, M.black, 0.004); })()], {ex:[2.2,0.5,0]});
+const fPlate2 = canvasTex(256, 256, g => { g.fillStyle = '#eeefec'; g.fillRect(0,0,256,256); g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '700 112px "Arial Narrow", Arial, sans-serif'; g.fillText('А00', 128, 70); g.fillText('00А', 128, 190); });
+part('932WM50-01-0', 'Передний номер (наклейка)', 'body', platePlane(fPlate2, 1.19, 1.19, Pd(NBu).addScaledVector(nf, 0.716), PI/2, tilt), {ex:[2.8,0.5,0]});
+part('446XH50-01-04', 'Саморезы номера M4×10 (5 шт.)', 'body', [[-0.5,-0.5],[0.5,-0.5],[-0.5,0.5],[0.5,0.5],[0,0]].flatMap(([dz, du]) => {
+  const p = Pd(NBu + du).addScaledVector(Z3, dz).addScaledVector(nf, 0.716);
+  return [latheAlong(p, p.clone().addScaledVector(nf, 0.022), [[0,0.042],[0.5,0.04],[1,0.026]], M.steel, 20)]; }), {ex:[3.2,0.5,0]});
 part('938WM50-02-0', 'Боковой номер левый',  'body', platePlane(sPlate, 1.9, 0.48, v(0.3,1.2,-0.815), PI), {ex:[0,0,-1.8]});
 part('938WM50-02-0', 'Боковой номер правый', 'body', platePlane(sPlate, 1.9, 0.48, v(0.3,1.2, 0.815), 0), {ex:[0,0, 1.8]});
-part('744XH45-01-0', 'Держатель переднего катафота', 'body', plateAt(roundedShape([[0,-0.34],[0.18,-0.2],[0.18,0.2],[0,0.32],[-0.18,0.2],[-0.18,-0.2]], 0.05), Fd(NB-0.98,0.28), dir, nf, 0.05, M.yellow, 0.012), {ex:[1.6,0,0]});
-part('743SP40-01-0', 'Передний катафот (белый)', 'body', plateAt(roundedShape([[0,-0.2],[0.12,-0.12],[0.12,0.14],[0,0.2],[-0.12,0.14],[-0.12,-0.12]], 0.03), Fd(NB-0.96,0.34), dir, nf, 0.02, std(0xe9ecef, {roughness:0.15, metalness:0.3})), {ex:[2.2,0,0]});
+part('744XH45-01-0', 'Держатель переднего катафота', 'body', plateAt(roundedShape([[0,-0.34],[0.18,-0.2],[0.18,0.2],[0,0.32],[-0.18,0.2],[-0.18,-0.2]], 0.05), Fd(2.75,0.28), dir, nf, 0.05, M.yellow, 0.012), {ex:[1.6,0,0]});
+part('743SP40-01-0', 'Передний катафот (белый)', 'body', plateAt(roundedShape([[0,-0.2],[0.12,-0.12],[0.12,0.14],[0,0.2],[-0.12,0.14],[-0.12,-0.12]], 0.03), Fd(2.77,0.34), dir, nf, 0.02, std(0xe9ecef, {roughness:0.15, metalness:0.3})), {ex:[2.2,0,0]});
 part('763KG50-01-0', 'Боковой катафот левый',  'body', rbox(0.13,0.42,0.03,0.012, M.amber, polar(A,0.95,150).x,polar(A,0.95,150).y,-0.335, 0.35), {ex:[0.6,0,-1.4]});
 part('763KG50-01-0', 'Боковой катафот правый', 'body', rbox(0.12,0.42,0.03,0.01, M.amber, P(0.7).x,P(0.7).y, 0.54, tilt), {ex:[0.6,0, 1.4]});
-part('934HL50-01-0', 'Шильдик (паспортная табличка)', 'body', boxBetween(DT(0.35,0,-0.69), DT(0.6,0,-0.69), 0.4, 0.02, M.steel), {ex:[0,0,-1.6]});
+part('934HL50-01-0', 'Шильдик (паспортная табличка)', 'body', boxBetween(DT(0.35,0,-0.575), DT(0.6,0,-0.56), 0.4, 0.015, M.steel), {ex:[0,0,-1.6]});
 
 /* Разнесённый вид: смещение группы + свой вектор детали */
 parts.forEach(p => {
